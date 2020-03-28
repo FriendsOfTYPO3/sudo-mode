@@ -1,0 +1,32 @@
+{
+  "name": "friendsoftypo3/sudo-mode",
+  "type": "typo3-cms-extension",
+  "description": "TYPO3 sudo mode",
+  "homepage": "https://typo3.org/",
+  "license": ["GPL-2.0-or-later"],
+  "keywords": ["TYPO3 CMS"],
+  "authors": [
+    {
+      "name": "Oliver Hader",
+      "email": "oliver.hader@typo3.org",
+      "homepage": "https://xn--hofhckerei-t5a.de/"
+    }
+  ],
+  "support": {
+    "source": "https://github.com/FriendsOfTYPO3/sudo-mode",
+    "issues": "https://github.com/FriendsOfTYPO3/sudo-mode/issues"
+  },
+  "require": {
+    "typo3/cms-core": "^9.5.15 || ^10.4.x@dev"
+  },
+  "autoload": {
+    "psr-4": {
+      "FriendsOfTYPO3\\SudoMode\\": "Classes/"
+    }
+  },
+  "extra": {
+    "typo3/cms": {
+      "extension-key": "sudo_mode"
+    }
+  }
+}

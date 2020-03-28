@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.0" xmlns:t3="http://typo3.org/schemas/xliff">
+	<file t3:id="1585388196" source-language="en" datatype="plaintext" original="EXT:sudo_mode/Resources/Private/Language/locallang.xlf" date="2020-03-28T09:37:00Z" product-name="sudo_mode">
+		<header/>
+		<body>
+			<trans-unit id="cancel" resname="cancel">
+				<source>Cancel</source>
+			</trans-unit>
+			<trans-unit id="confirm" resname="confirm">
+				<source>Confirm</source>
+			</trans-unit>
+			<trans-unit id="sudoPasswordConfirm" resname="sudoPasswordConfirm">
+				<source>Confirm password to continue</source>
+			</trans-unit>
+			<trans-unit id="sudoPasswordInvalid" resname="sudoPasswordConfirm">
+				<source>Invalid password</source>
+			</trans-unit>
+		</body>
+	</file>
+</xliff>

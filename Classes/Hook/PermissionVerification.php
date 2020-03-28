@@ -1,0 +1,76 @@
+<?php
+declare(strict_types = 1);
+
+namespace FriendsOfTYPO3\SudoMode\Hook;
+
+/*
+ * This file is part of the TYPO3 CMS project.
+ *
+ * It is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License, either version 2
+ * of the License, or any later version.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE.txt file that was distributed with this source code.
+ *
+ * The TYPO3 project - inspiring people to share!
+ */
+
+use FriendsOfTYPO3\SudoMode\Backend\VerificationHandler;
+use FriendsOfTYPO3\SudoMode\Backend\VerificationRequest;
+use FriendsOfTYPO3\SudoMode\Model\Behavior;
+use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\DataHandling\DataHandler;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+
+/**
+ * @internal This class is a hook implementation and is not part of the TYPO3 Core API.
+ */
+class PermissionVerification
+{
+    protected const TABLE_NAMES = [
+        'be_users',
+        'be_groups',
+    ];
+
+    /**
+     * @var VerificationHandler
+     */
+    protected $verification;
+
+    /**
+     * @var string[]
+     */
+    protected $tableNames = [];
+
+    public function __construct(VerificationHandler $verification = null)
+    {
+        $this->verification = $verification ?? GeneralUtility::makeInstance(VerificationHandler::class);
+        $this->tableNames = (new Behavior())->getTableNames() ?? self::TABLE_NAMES;
+    }
+
+    public function processDatamap_beforeStart(DataHandler $dataHandler): void
+    {
+        $tableNames = array_keys($dataHandler->datamap ?? []);
+        $this->assertTableNamesPermission($tableNames, $dataHandler->BE_USER);
+    }
+
+    public function processCmdmap_beforeStart(DataHandler $dataHandler): void
+    {
+        $tableNames = array_keys($dataHandler->cmdmap ?? []);
+        $this->assertTableNamesPermission($tableNames, $dataHandler->BE_USER);
+    }
+
+    protected function assertTableNamesPermission(array $tableNames, BackendUserAuthentication $user): void
+    {
+        $affectedTableNames = array_intersect($this->tableNames, $tableNames);
+        if ($affectedTableNames === []) {
+            return;
+        }
+        $verificationRequest = new VerificationRequest(
+            VerificationRequest::TYPE_TABLE_NAME,
+            $affectedTableNames
+        );
+        $this->verification->assertSubjects($verificationRequest, $user);
+    }
+}

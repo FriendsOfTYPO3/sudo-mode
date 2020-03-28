@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers">
+<head>
+    <title>Session Verification</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <link rel="stylesheet" type="text/css" href="{f:uri.resource(path: 'Css/backend.css', extensionName: 'backend')}?{bust}" />
+    <link rel="icon" type="image/vnd.microsoft.icon" href="{f:uri.resource(path: 'Icons/favicon.ico')}?{bust}" />
+    <script>
+        var TYPO3 = TYPO3 || {};
+        var __bust = '{bust}';
+    </script>
+    <script src="{f:uri.resource(path: 'JavaScript/Contrib/require.js', extensionName: 'core')}?{bust}"></script>
+</head>
+<body>
+<div class="modal-backdrop in"></div>
+<div class="modal modal-severity-warning modal-size-small" tabindex="-1" role="dialog" style="display: block;">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">
+                    <f:translate key="LLL:EXT:sudo_mode/Resources/Private/Language/locallang.xlf:sudoPasswordConfirm" />
+                </h4>
+            </div>
+            <div class="modal-body">
+                <f:if condition="{flagInvalidPassword}">
+                    <div class="alert alert-danger">
+                        <f:translate key="LLL:EXT:sudo_mode/Resources/Private/Language/locallang.xlf:sudoPasswordInvalid" />
+                    </div>
+                </f:if>
+
+                <f:form id="confirm-sudo" class="form" method="post"
+                    actionUri="{f:be.uri(route:'session_verification_verify', parameters:'{verificationRequest:verificationRequest,returnUrl:returnUrl}')}">
+                    <div class="form-group">
+                        <div class="form-control-holder">
+                            <f:form.password name="verificationPassword" class="form-control" placeholder="Password" />
+                        </div>
+                    </div>
+                </f:form>
+            </div>
+            <div class="modal-footer">
+                <f:if condition="{returnUrl}">
+                    <a href="{returnUrl}" class="btn btn-default" role="button">
+                        <f:translate key="LLL:EXT:sudo_mode/Resources/Private/Language/locallang.xlf:cancel" />
+                    </a>
+                </f:if>
+                <button type="submit" form="confirm-sudo" class="btn btn-warning" role="button">
+                    <f:translate key="LLL:EXT:sudo_mode/Resources/Private/Language/locallang.xlf:confirm" />
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
