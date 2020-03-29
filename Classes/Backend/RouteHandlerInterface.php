@@ -1,6 +1,6 @@
 <?php
 declare(strict_types = 1);
-namespace FriendsOfTYPO3\SudoMode\Model;
+namespace FriendsOfTYPO3\SudoMode\Backend;
 
 /*
  * This file is part of the TYPO3 CMS project.
@@ -15,18 +15,12 @@ namespace FriendsOfTYPO3\SudoMode\Model;
  * The TYPO3 project - inspiring people to share!
  */
 
-/**
- * Model to represent behavior configuration.
- *
- * @todo Probably should have different name/namespace
- */
-class Behavior
+use Psr\Http\Message\ServerRequestInterface;
+use TYPO3\CMS\Backend\Routing\Route;
+
+interface RouteHandlerInterface
 {
-    public function getTableNames(): array
-    {
-        return [
-            'be_users',
-            'be_groups',
-        ];
-    }
+    public function canHandle(ServerRequestInterface $request, Route $route): bool;
+
+    public function resolveMetaData(ServerRequestInterface $request, Route $route): RouteMetaData;
 }

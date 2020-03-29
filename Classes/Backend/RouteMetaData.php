@@ -1,6 +1,6 @@
 <?php
 declare(strict_types = 1);
-namespace FriendsOfTYPO3\SudoMode\Model;
+namespace FriendsOfTYPO3\SudoMode\Backend;
 
 /*
  * This file is part of the TYPO3 CMS project.
@@ -15,18 +15,25 @@ namespace FriendsOfTYPO3\SudoMode\Model;
  * The TYPO3 project - inspiring people to share!
  */
 
-/**
- * Model to represent behavior configuration.
- *
- * @todo Probably should have different name/namespace
- */
-class Behavior
+class RouteMetaData
 {
-    public function getTableNames(): array
+    /**
+     * @var string|null
+     */
+    protected $returnUrl;
+
+    public function withReturnUrl(string $returnUrl): self
     {
-        return [
-            'be_users',
-            'be_groups',
-        ];
+        $target = clone $this;
+        $target->returnUrl = $returnUrl;
+        return $target;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getReturnUrl(): ?string
+    {
+        return $this->returnUrl;
     }
 }
