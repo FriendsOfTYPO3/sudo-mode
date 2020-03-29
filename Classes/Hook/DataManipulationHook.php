@@ -18,7 +18,6 @@ namespace FriendsOfTYPO3\SudoMode\Hook;
 use FriendsOfTYPO3\SudoMode\Backend\VerificationHandler;
 use FriendsOfTYPO3\SudoMode\Backend\VerificationRequest;
 use FriendsOfTYPO3\SudoMode\Model\Behavior;
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -52,25 +51,34 @@ class DataManipulationHook
     public function processDatamap_beforeStart(DataHandler $dataHandler): void
     {
         $tableNames = array_keys($dataHandler->datamap ?? []);
-        $this->assertTableNamesPermission($tableNames, $dataHandler->BE_USER);
+        $this->assertTableNamesPermission($tableNames, $dataHandler);
     }
 
     public function processCmdmap_beforeStart(DataHandler $dataHandler): void
     {
         $tableNames = array_keys($dataHandler->cmdmap ?? []);
-        $this->assertTableNamesPermission($tableNames, $dataHandler->BE_USER);
+        $this->assertTableNamesPermission($tableNames, $dataHandler);
     }
 
-    protected function assertTableNamesPermission(array $tableNames, BackendUserAuthentication $user): void
+    protected function shallVerifyPermission(DataHandler $dataHandler): bool
+    {
+        // skip verification when importing or access checks shall be bypassed (e.g. for ReferenceIndex)
+        return !$dataHandler->isImporting && !$dataHandler->bypassAccessCheckForRecords;
+    }
+
+    protected function assertTableNamesPermission(array $tableNames, DataHandler $dataHandler): void
     {
         $affectedTableNames = array_intersect($this->tableNames, $tableNames);
         if ($affectedTableNames === []) {
+            return;
+        }
+        if (!$this->shallVerifyPermission($dataHandler)) {
             return;
         }
         $verificationRequest = new VerificationRequest(
             VerificationRequest::TYPE_TABLE_NAME,
             $affectedTableNames
         );
-        $this->verification->assertSubjects($verificationRequest, $user);
+        $this->verification->assertSubjects($verificationRequest, $dataHandler->BE_USER);
     }
 }
