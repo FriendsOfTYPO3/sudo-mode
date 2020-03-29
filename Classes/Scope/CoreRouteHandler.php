@@ -33,16 +33,26 @@ class CoreRouteHandler implements RouteHandlerInterface
     {
         $this->handlers = [
             // \TYPO3\CMS\Backend\Controller\EditDocumentController
-            '/record/edit' => function(Route $route, ServerRequestInterface $request): ?string {
+            '/record/edit' => function(Route $route, ServerRequestInterface $request): string {
                 $parsedBody = $request->getParsedBody();
                 $queryParams = $request->getQueryParams();
                 return GeneralUtility::sanitizeLocalUrl($parsedBody['returnUrl'] ?? $queryParams['returnUrl'] ?? null);
             },
             // \TYPO3\CMS\Setup\Controller\SetupModuleController
-            '/module/user/setup' => function(Route $route, ServerRequestInterface $request): ?string {
+            '/module/user/setup' => function(Route $route, ServerRequestInterface $request): string {
                 $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
                 $routeIdentifier = $route->getOption('_identifier');
                 return (string)$uriBuilder->buildUriFromRoute($routeIdentifier);
+            },
+            // \TYPO3\CMS\Backend\Controller\Controller\ContentElement\ElementHistoryController
+            '/record/history' => function(Route $route, ServerRequestInterface $request): string {
+                $queryParams = $request->getQueryParams();
+                $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
+                $routeIdentifier = $route->getOption('_identifier');
+                return (string)$uriBuilder->buildUriFromRoute($routeIdentifier, [
+                    'element' => $queryParams['element'] ?? '',
+                    'historyEntry' => $queryParams['historyEntry'] ?? '',
+                ]);
             },
         ];
     }
