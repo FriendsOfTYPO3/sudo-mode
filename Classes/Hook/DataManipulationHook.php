@@ -26,7 +26,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  * `DataHandler` hook to guard commands that would be modifying data in database tables
  * that need confirmation before actually being performed.
  */
-class PermissionVerification
+class DataManipulationHook
 {
     protected const TABLE_NAMES = [
         'be_users',
