@@ -112,7 +112,7 @@ class VerificationController implements \Psr\Log\LoggerAwareInterface
      * @todo Make use of extracted functionality once it's available in TYPO3 core
      *
      * @param string $password
-     * @return boolAbstractUserAuthentication
+     * @return bool
      */
     protected function isValidPassword(string $password): bool
     {
