@@ -17,7 +17,10 @@ namespace FriendsOfTYPO3\SudoMode\Hook;
 
 use FriendsOfTYPO3\SudoMode\Backend\VerificationHandler;
 use FriendsOfTYPO3\SudoMode\Backend\VerificationRequest;
+use FriendsOfTYPO3\SudoMode\LoggerAccessorTrait;
 use FriendsOfTYPO3\SudoMode\Model\Behavior;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -25,8 +28,11 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  * `DataHandler` hook to guard commands that would be modifying data in database tables
  * that need confirmation before actually being performed.
  */
-class DataManipulationHook
+class DataManipulationHook implements LoggerAwareInterface
 {
+    use LoggerAwareTrait;
+    use LoggerAccessorTrait;
+
     protected const TABLE_NAMES = [
         'be_users',
         'be_groups',
@@ -72,13 +78,16 @@ class DataManipulationHook
         if ($affectedTableNames === []) {
             return;
         }
-        if (!$this->shallVerifyPermission($dataHandler)) {
-            return;
-        }
+
         $verificationRequest = new VerificationRequest(
             VerificationRequest::TYPE_TABLE_NAME,
             $affectedTableNames
         );
+
+        if (!$this->shallVerifyPermission($dataHandler)) {
+            $this->logger->notice('By-passed assertion', $this->createLoggerContext($verificationRequest));
+            return;
+        }
         $this->verification->assertSubjects($verificationRequest, $dataHandler->BE_USER);
     }
 }

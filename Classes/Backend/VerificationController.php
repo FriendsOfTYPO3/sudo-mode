@@ -15,9 +15,11 @@ namespace FriendsOfTYPO3\SudoMode\Backend;
  * The TYPO3 project - inspiring people to share!
  */
 
+use FriendsOfTYPO3\SudoMode\LoggerAccessorTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
+use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Authentication\AuthenticationService;
@@ -34,9 +36,10 @@ use TYPO3\CMS\Fluid\View\StandaloneView;
  * In case confirmation is successful, previous request will be replayed using
  * a `ServerRequestInstructionException`.
  */
-class VerificationController implements \Psr\Log\LoggerAwareInterface
+class VerificationController implements LoggerAwareInterface
 {
     use LoggerAwareTrait;
+    use LoggerAccessorTrait;
 
     protected const FLAG_INVALID_PASSWORD = 1;
 
@@ -92,20 +95,26 @@ class VerificationController implements \Psr\Log\LoggerAwareInterface
         $verificationRequest = VerificationRequest::fromArray(json_decode($verificationRequest, true));
         $verificationPassword = (string)($request->getParsedBody()['verificationPassword'] ?? '');
         $returnUrl = (string)($request->getQueryParams()['returnUrl'] ?? '');
+        $loggerContext = $this->createLoggerContext($verificationRequest, $this->user);
 
         if (!$this->isJsonRequest($request)) {
             if ($this->isValidPassword($verificationPassword)) {
                 $verificationHandler = GeneralUtility::makeInstance(VerificationHandler::class);
                 $verificationHandler->grantSubject($verificationRequest, $this->user);
                 $requestInstruction = $verificationHandler->fetchRequestInstruction($verificationRequest, $this->user);
+                $this->logger->info('Password verification succeeded', $loggerContext);
                 throw new ServerRequestInstructionException($requestInstruction);
             }
+
+            $this->logger->warning('Password verification failed', $loggerContext);
             $uri = $this->buildUriForRequestAction($verificationRequest, $returnUrl, self::FLAG_INVALID_PASSWORD);
             return new RedirectResponse($uri, 401);
         }
         // @todo Add JSON handling
         return new JsonResponse([], 500);
     }
+
+    // @todo Add cancelAction (clear session-data, log cancellation, redirect back)
 
     /**
      * Copied from AbstractUserAuthentication to run through authentication services.

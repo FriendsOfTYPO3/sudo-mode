@@ -20,10 +20,13 @@ use FriendsOfTYPO3\SudoMode\Backend\VerificationController;
 use FriendsOfTYPO3\SudoMode\Backend\VerificationException;
 use FriendsOfTYPO3\SudoMode\Backend\VerificationHandler;
 use FriendsOfTYPO3\SudoMode\Backend\VerificationRequest;
+use FriendsOfTYPO3\SudoMode\LoggerAccessorTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 use TYPO3\CMS\Backend\Routing\Exception\ResourceNotFoundException;
 use TYPO3\CMS\Backend\Routing\Route;
 use TYPO3\CMS\Backend\Routing\Router;
@@ -35,8 +38,11 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 /**
  * @internal Note that this is not public API yet.
  */
-class RequestHandlerGuard implements MiddlewareInterface
+class RequestHandlerGuard implements MiddlewareInterface, LoggerAwareInterface
 {
+    use LoggerAwareTrait;
+    use LoggerAccessorTrait;
+
     protected $routeManager;
 
     public function __construct(RouteManager $routeManager = null)
@@ -52,10 +58,16 @@ class RequestHandlerGuard implements MiddlewareInterface
         try {
             return $handler->handle($request);
         } catch (VerificationException $exception) {
-            if (!$shallGuard) {
-                throw $exception;
+            $verificationRequest = $exception->getVerificationRequest();
+            $loggerContext = $this->createLoggerContext($route, $verificationRequest, $this->getBackendUser());
+
+            if ($shallGuard) {
+                $this->logger->info('Handled verification request', $loggerContext);
+                return $this->handle($request, $route, $exception->getVerificationRequest());
             }
-            return $this->handle($request, $route, $exception->getVerificationRequest());
+
+            $this->logger->notice('Unhandled verification request', $loggerContext);
+            throw $exception;
         }
     }
 
