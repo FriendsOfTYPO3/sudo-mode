@@ -19,7 +19,8 @@ use TYPO3\CMS\Core\Crypto\Random;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
- * @internal
+ * Model for formalize a request/command to be confirmed using user's password.
+ * This model focuses on the subject that needs to be confirmed and handled.
  */
 class VerificationRequest implements \JsonSerializable
 {

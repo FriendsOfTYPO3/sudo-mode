@@ -15,23 +15,28 @@ namespace FriendsOfTYPO3\SudoMode\Backend;
  * The TYPO3 project - inspiring people to share!
  */
 
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
+use Psr\Log\LoggerAwareTrait;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Authentication\AuthenticationService;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Http\HtmlResponse;
+use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Http\RedirectResponse;
 use TYPO3\CMS\Core\Http\ServerRequestInstructionException;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Fluid\View\StandaloneView;
 
 /**
- * @internal This class is a hook implementation and is not part of the TYPO3 Core API.
+ * Controller to show dialog to confirm previous command with user's password.
+ * In case confirmation is successful, previous request will be replayed using
+ * a `ServerRequestInstructionException`.
  */
 class VerificationController implements \Psr\Log\LoggerAwareInterface
 {
-    use \Psr\Log\LoggerAwareTrait;
+    use LoggerAwareTrait;
 
     protected const FLAG_INVALID_PASSWORD = 1;
 
@@ -40,6 +45,9 @@ class VerificationController implements \Psr\Log\LoggerAwareInterface
      */
     protected $user;
 
+    /**
+     * @var UriBuilder
+     */
     protected $uriBuilder;
 
     public function __construct(UriBuilder $uriBuilder = null, BackendUserAuthentication $user = null)
@@ -57,7 +65,7 @@ class VerificationController implements \Psr\Log\LoggerAwareInterface
         ]);
     }
 
-    public function requestAction(ServerRequestInterface $request)
+    public function requestAction(ServerRequestInterface $request): ResponseInterface
     {
         $verificationRequest = (string)($request->getQueryParams()['verificationRequest'] ?? '');
         $returnUrl = (string)($request->getQueryParams()['returnUrl'] ?? '');
@@ -74,9 +82,11 @@ class VerificationController implements \Psr\Log\LoggerAwareInterface
             ]);
             return new HtmlResponse($view->render());
         }
+        // @todo Add JSON handling
+        return new JsonResponse([], 500);
     }
 
-    public function verifyAction(ServerRequestInterface $request)
+    public function verifyAction(ServerRequestInterface $request): ResponseInterface
     {
         $verificationRequest = (string)($request->getQueryParams()['verificationRequest'] ?? '');
         $verificationRequest = VerificationRequest::fromArray(json_decode($verificationRequest, true));
@@ -93,8 +103,17 @@ class VerificationController implements \Psr\Log\LoggerAwareInterface
             $uri = $this->buildUriForRequestAction($verificationRequest, $returnUrl, self::FLAG_INVALID_PASSWORD);
             return new RedirectResponse($uri, 401);
         }
+        // @todo Add JSON handling
+        return new JsonResponse([], 500);
     }
 
+    /**
+     * Copied from AbstractUserAuthentication to run through authentication services.
+     * @todo Make use of extracted functionality once it's available in TYPO3 core
+     *
+     * @param string $password
+     * @return boolAbstractUserAuthentication
+     */
     protected function isValidPassword(string $password): bool
     {
         $subType = 'authUserBE';

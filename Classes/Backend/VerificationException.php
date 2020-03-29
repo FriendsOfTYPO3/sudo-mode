@@ -16,7 +16,8 @@ namespace FriendsOfTYPO3\SudoMode\Backend;
  */
 
 /**
- * @internal This class is a hook implementation and is not part of the TYPO3 Core API.
+ * Exception used to signal that confirmation using user's password
+ * is required in order to actually execute the current command.
  */
 class VerificationException extends \RuntimeException
 {

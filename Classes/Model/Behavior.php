@@ -15,13 +15,10 @@ namespace FriendsOfTYPO3\SudoMode\Model;
  * The TYPO3 project - inspiring people to share!
  */
 
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\MiddlewareInterface;
-use Psr\Http\Server\RequestHandlerInterface;
-
 /**
- * @internal Note that this is not public API yet.
+ * Model to represent behavior configuration.
+ *
+ * @todo Probably should have different name/namespace
  */
 class Behavior
 {

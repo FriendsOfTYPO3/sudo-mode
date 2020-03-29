@@ -1,6 +1,5 @@
 <?php
 declare(strict_types = 1);
-
 namespace FriendsOfTYPO3\SudoMode\Hook;
 
 /*
@@ -24,7 +23,8 @@ use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
- * @internal This class is a hook implementation and is not part of the TYPO3 Core API.
+ * `DataHandler` hook to guard commands that would be modifying data in database tables
+ * that need confirmation before actually being performed.
  */
 class PermissionVerification
 {

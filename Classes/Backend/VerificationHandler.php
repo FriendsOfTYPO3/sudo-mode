@@ -20,7 +20,11 @@ use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
 
 /**
- * @internal This class is a hook implementation and is not part of the TYPO3 Core API.
+ * Handling potential command requests, stores results and requests in user's session
+ * database table. Previously confirmed commands are valid for a given expiration time.
+ *
+ * Original requests are stored in session data as well and thus can be used to replay
+ * the previous request once confirmation is successful.
  */
 class VerificationHandler
 {
