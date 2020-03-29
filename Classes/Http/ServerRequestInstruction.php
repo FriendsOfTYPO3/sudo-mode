@@ -47,7 +47,7 @@ class ServerRequestInstruction implements \JsonSerializable, ServerRequestInstru
     protected $body;
 
     /**
-     * @var array
+     * @var array|null
      */
     protected $parsedBody;
 
@@ -96,8 +96,8 @@ class ServerRequestInstruction implements \JsonSerializable, ServerRequestInstru
                 'mode' => $this->body->getMetadata('mode'),
                 'contents' => (string)$this->body,
             ],
-            'parsedBody' => $this->getParsedBody(),
-            'queryParams' => $this->getQueryParams(),
+            'parsedBody' => $this->parsedBody,
+            'queryParams' => $this->queryParams,
         ];
     }
 
@@ -153,7 +153,7 @@ class ServerRequestInstruction implements \JsonSerializable, ServerRequestInstru
     /**
      * @return array
      */
-    public function getParsedBody(): array
+    public function getParsedBody(): ?array
     {
         return $this->parsedBody;
     }
