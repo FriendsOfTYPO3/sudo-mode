@@ -64,7 +64,7 @@ class VerificationRequest implements \JsonSerializable
     public function __construct(string $type, array $subjects, string $identifier = null, int $currentTime = null)
     {
         $this->type = $type;
-        $this->subjects = $subjects;
+        $this->subjects = array_values($subjects);
         $this->identifier = $identifier ?? (new Random)->generateRandomHexString(20);
         $this->currentTime = $currentTime ?? $GLOBALS['EXEC_TIME'] ?? time();
     }
