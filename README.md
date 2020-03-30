@@ -1,6 +1,8 @@
 # TYPO3 sudo mode
 
-Experimental implementation of sudo mode in TYPO3 as extension.
+TYPO3 extension providing "sudo mode" to mitigate unintended modifications. 
+
+> :information_source: **beta** state - feel free to test and provide feedback for this package
 
 * TYPO3 v10 LTS
 * TYPO3 v9 LTS
