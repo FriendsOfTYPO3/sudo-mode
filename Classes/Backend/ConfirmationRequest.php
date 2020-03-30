@@ -15,8 +15,6 @@ namespace FriendsOfTYPO3\SudoMode\Backend;
  * The TYPO3 project - inspiring people to share!
  */
 
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-
 /**
  * Model for formalize a request/command to be confirmed using user's password.
  * This model focuses on the subject that needs to be confirmed and handled.
@@ -55,9 +53,7 @@ class ConfirmationRequest implements \JsonSerializable
 
     public function jsonSerialize(): array
     {
-        $data = get_object_vars($this);
-        $data['hmac'] = GeneralUtility::hmac(json_encode($data));
-        return $data;
+        return get_object_vars($this);
     }
 
     /**
