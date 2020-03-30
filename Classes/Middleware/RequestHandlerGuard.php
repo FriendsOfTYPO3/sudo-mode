@@ -54,39 +54,39 @@ class RequestHandlerGuard implements MiddlewareInterface, LoggerAwareInterface
      */
     protected $routeManager;
 
-    public function __construct(ConfirmationHandler $confirmationHandler = null, RouteManager $routeManager = null)
-    {
-        $this->confirmationHandler = $confirmationHandler ?? GeneralUtility::makeInstance(ConfirmationHandler::class);
-        $this->routeManager = $routeManager ?? GeneralUtility::makeInstance(RouteManager::class);
-    }
-
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $route = $this->resolveRoute($request);
-        $shallGuard = $route !== null && $this->routeManager->canHandle($request, $route);
-
         try {
             return $handler->handle($request);
         } catch (ConfirmationException $exception) {
-            $bundle = $exception->getConfirmationBundle();
-            $loggerContext = $this->createLoggerContext($route, $bundle, $this->getBackendUser());
-
-            if ($shallGuard) {
-                $this->logger->info('Handled verification request', $loggerContext);
-                $bundle = $bundle
-                    ->withRequestInstruction(ServerRequestInstruction::fromServerRequest($request))
-                    ->withRequestMetaData($this->routeManager->resolveMetaData($request, $route));
-                return $this->handle($bundle);
-            }
-
-            $this->logger->notice('Unhandled verification request', $loggerContext);
-            throw $exception;
+            return $this->handleException($exception, $request, $route);
         }
     }
 
-    protected function handle(ConfirmationBundle $bundle): ResponseInterface
+    protected function handleException(ConfirmationException $exception, ServerRequestInterface $request, Route $route)
     {
-        $this->confirmationHandler
+        $bundle = $exception->getConfirmationBundle();
+        $loggerContext = $this->createLoggerContext($route, $bundle, $this->getBackendUser());
+
+        $routeManager = $this->getRouteManager();
+        $shallGuard = $route !== null && $routeManager->canHandle($request, $route);
+
+        if ($shallGuard) {
+            $this->logger->info('Handled verification request', $loggerContext);
+            $bundle = $bundle
+                ->withRequestInstruction(ServerRequestInstruction::fromServerRequest($request))
+                ->withRequestMetaData($routeManager->resolveMetaData($request, $route));
+            return $this->processBundle($bundle);
+        }
+
+        $this->logger->notice('Unhandled verification request', $loggerContext);
+        throw $exception;
+    }
+
+    protected function processBundle(ConfirmationBundle $bundle): ResponseInterface
+    {
+        $this->getConfirmationHandler()
             ->commitConfirmationBundle($bundle, $this->getBackendUser());
         $uri = GeneralUtility::makeInstance(ConfirmationController::class)
             ->buildActionUriFromBundle('request', $bundle);
@@ -105,6 +105,22 @@ class RequestHandlerGuard implements MiddlewareInterface, LoggerAwareInterface
         } catch (ResourceNotFoundException $exception) {
             return null;
         }
+    }
+
+    protected function getConfirmationHandler(): ConfirmationHandler
+    {
+        if (!isset($this->confirmationHandler)) {
+            $this->confirmationHandler = GeneralUtility::makeInstance(ConfirmationHandler::class);
+        }
+        return $this->confirmationHandler;
+    }
+
+    protected function getRouteManager(): RouteManager
+    {
+        if (!isset($this->routeManager)) {
+            $this->routeManager = GeneralUtility::makeInstance(RouteManager::class);
+        }
+        return $this->routeManager;
     }
 
     protected function getBackendUser(): BackendUserAuthentication
