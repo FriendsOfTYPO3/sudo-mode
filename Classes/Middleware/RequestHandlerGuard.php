@@ -56,16 +56,16 @@ class RequestHandlerGuard implements MiddlewareInterface, LoggerAwareInterface
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $route = $this->resolveRoute($request);
         try {
             return $handler->handle($request);
         } catch (ConfirmationException $exception) {
-            return $this->handleException($exception, $request, $route);
+            return $this->handleConfirmationException($exception, $request);
         }
     }
 
-    protected function handleException(ConfirmationException $exception, ServerRequestInterface $request, Route $route)
+    protected function handleConfirmationException(ConfirmationException $exception, ServerRequestInterface $request)
     {
+        $route = $this->resolveRoute($request);
         $bundle = $exception->getConfirmationBundle();
         $loggerContext = $this->createLoggerContext($route, $bundle, $this->getBackendUser());
 
