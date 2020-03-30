@@ -107,6 +107,20 @@ class ConfirmationController implements LoggerAwareInterface
         return new JsonResponse([], 500);
     }
 
+    /**
+     * @todo ext:rsaauth not working yet in TYPO3 v9, extract to optional "controller enhancer"
+     */
+    protected function applyRsaAuth()
+    {
+        $isEnabled = ($GLOBALS['TYPO3_CONF_VARS']['BE']['loginSecurityLevel'] ?? '') === 'rsa';
+        if (!$isEnabled) {
+            return;
+        }
+        $rsaEncryptionEncoder = GeneralUtility::makeInstance(\TYPO3\CMS\Rsaauth\RsaEncryptionEncoder::class);
+        $rsaEncryptionEncoder->enableRsaEncryption(true);
+        // PageRender contains JavaScript libs and inline code...
+    }
+
     protected function verifyAction(ServerRequestInterface $request, ConfirmationBundle $bundle): ResponseInterface
     {
         $confirmationPassword = (string)($request->getParsedBody()['confirmationPassword'] ?? '');

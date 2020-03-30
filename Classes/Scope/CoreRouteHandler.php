@@ -31,6 +31,7 @@ class CoreRouteHandler implements RouteHandlerInterface
 
     public function __construct()
     {
+        // TYPO3 v10
         $this->handlers = [
             // \TYPO3\CMS\Backend\Controller\EditDocumentController
             '/record/edit' => function(Route $route, ServerRequestInterface $request): string {
@@ -55,16 +56,26 @@ class CoreRouteHandler implements RouteHandlerInterface
                 ]);
             },
         ];
+
+        // TYPO3 v9
+        $this->handlers['/user/setup'] = $this->handlers['/module/user/setup'];
     }
 
     public function canHandle(ServerRequestInterface $request, Route $route): bool
     {
-        return in_array($route->getPath(), array_keys($this->handlers), true);
+        $routePath = $this->normalizeRoutePath($route);
+        return in_array($routePath, array_keys($this->handlers), true);
     }
 
     public function resolveMetaData(ServerRequestInterface $request, Route $route): RequestMetaData
     {
-        $returnUrl = $this->handlers[$route->getPath()]($route, $request);
+        $routePath = $this->normalizeRoutePath($route);
+        $returnUrl = $this->handlers[$routePath]($route, $request);
         return (new RequestMetaData())->withReturnUrl($returnUrl);
+    }
+
+    protected function normalizeRoutePath(Route $route): string
+    {
+        return rtrim($route->getPath(), '/');
     }
 }
