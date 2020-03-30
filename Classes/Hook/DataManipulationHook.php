@@ -33,31 +33,14 @@ class DataManipulationHook implements LoggerAwareInterface
     use LoggerAwareTrait;
     use LoggerAccessorTrait;
 
-    protected const TABLE_NAMES = [
-        'be_users',
-        'be_groups',
-    ];
-
-    /**
-     * @var ConfirmationFactory
-     */
-    protected $factory;
-
-    /**
-     * @var ConfirmationHandler
-     */
-    protected $handler;
-
     /**
      * @var string[]
      */
     protected $tableNames = [];
 
-    public function __construct(ConfirmationFactory $factory = null, ConfirmationHandler $handler = null)
+    public function __construct()
     {
-        $this->factory = $factory ?? GeneralUtility::makeInstance(ConfirmationFactory::class);
-        $this->handler = $handler ?? GeneralUtility::makeInstance(ConfirmationHandler::class);
-        $this->tableNames = (new Behavior())->getTableNames() ?? self::TABLE_NAMES;
+        $this->tableNames = $this->getBehavior()->getTableNames();
     }
 
     public function processDatamap_beforeStart(DataHandler $dataHandler): void
@@ -85,11 +68,26 @@ class DataManipulationHook implements LoggerAwareInterface
             return;
         }
 
-        $confirmationBundle = $this->factory->createBundleForTableNameSubjects($affectedTableNames);
+        $confirmationBundle = $this->getFactory()->createBundleForTableNameSubjects($affectedTableNames);
         if (!$this->shallVerifyPermission($dataHandler)) {
             $this->logger->notice('By-passed assertion', $this->createLoggerContext($confirmationBundle));
             return;
         }
-        $this->handler->assertSubjects($confirmationBundle, $dataHandler->BE_USER);
+        $this->getHandler()->assertSubjects($confirmationBundle, $dataHandler->BE_USER);
+    }
+
+    protected function getBehavior(): Behavior
+    {
+        return GeneralUtility::makeInstance(Behavior::class);
+    }
+
+    protected function getFactory(): ConfirmationFactory
+    {
+        return GeneralUtility::makeInstance(ConfirmationFactory::class);
+    }
+
+    protected function getHandler(): ConfirmationHandler
+    {
+        return GeneralUtility::makeInstance(ConfirmationHandler::class);
     }
 }
