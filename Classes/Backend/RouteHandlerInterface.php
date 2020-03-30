@@ -22,5 +22,5 @@ interface RouteHandlerInterface
 {
     public function canHandle(ServerRequestInterface $request, Route $route): bool;
 
-    public function resolveMetaData(ServerRequestInterface $request, Route $route): RouteMetaData;
+    public function resolveMetaData(ServerRequestInterface $request, Route $route): RequestMetaData;
 }

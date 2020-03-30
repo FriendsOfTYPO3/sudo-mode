@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers">
 <head>
-    <title>Session Verification</title>
+    <title>Session Confirmation</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <link rel="stylesheet" type="text/css" href="{f:uri.resource(path: 'Css/backend.css', extensionName: 'backend')}?{bust}" />
@@ -29,18 +29,17 @@
                     </div>
                 </f:if>
 
-                <f:form id="confirm-sudo" class="form" method="post"
-                    actionUri="{f:be.uri(route:'session_verification_verify', parameters:'{verificationRequest:verificationRequest,returnUrl:returnUrl}')}">
+                <f:form id="confirm-sudo" class="form" method="post" actionUri="{verifyUri}">
                     <div class="form-group">
                         <div class="form-control-holder">
-                            <f:form.password name="verificationPassword" class="form-control" placeholder="Password" />
+                            <f:form.password name="confirmationPassword" class="form-control" placeholder="Password" />
                         </div>
                     </div>
                 </f:form>
             </div>
             <div class="modal-footer">
-                <f:if condition="{returnUrl}">
-                    <a href="{returnUrl}" class="btn btn-default" role="button">
+                <f:if condition="{cancelUri}">
+                    <a href="{cancelUri}" class="btn btn-default" role="button">
                         <f:translate key="LLL:EXT:sudo_mode/Resources/Private/Language/locallang.xlf:cancel" />
                     </a>
                 </f:if>

@@ -16,7 +16,7 @@ namespace FriendsOfTYPO3\SudoMode\Scope;
  */
 
 use FriendsOfTYPO3\SudoMode\Backend\RouteHandlerInterface;
-use FriendsOfTYPO3\SudoMode\Backend\RouteMetaData;
+use FriendsOfTYPO3\SudoMode\Backend\RequestMetaData;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Routing\Route;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
@@ -62,9 +62,9 @@ class CoreRouteHandler implements RouteHandlerInterface
         return in_array($route->getPath(), array_keys($this->handlers), true);
     }
 
-    public function resolveMetaData(ServerRequestInterface $request, Route $route): RouteMetaData
+    public function resolveMetaData(ServerRequestInterface $request, Route $route): RequestMetaData
     {
         $returnUrl = $this->handlers[$route->getPath()]($route, $request);
-        return (new RouteMetaData())->withReturnUrl($returnUrl);
+        return (new RequestMetaData())->withReturnUrl($returnUrl);
     }
 }

@@ -15,14 +15,13 @@ namespace FriendsOfTYPO3\SudoMode\Backend;
  * The TYPO3 project - inspiring people to share!
  */
 
-use TYPO3\CMS\Core\Crypto\Random;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Model for formalize a request/command to be confirmed using user's password.
  * This model focuses on the subject that needs to be confirmed and handled.
  */
-class VerificationRequest implements \JsonSerializable
+class ConfirmationRequest implements \JsonSerializable
 {
     public const TYPE_TABLE_NAME = 'tableName';
 
@@ -44,29 +43,14 @@ class VerificationRequest implements \JsonSerializable
     /**
      * @var int
      */
-    protected $currentTime;
+    protected $expirationTimestamp;
 
-    public static function fromArray(array $data): self
-    {
-        $hmac = $data['hmac'] ?? null;
-        $data = array_intersect_key($data, get_class_vars(static::class));
-        if (empty($hmac) || GeneralUtility::hmac(json_encode($data)) !== $hmac) {
-            throw new \RuntimeException('Invalid HMAC', 1584515264);
-        }
-        return new static(
-            $data['type'],
-            $data['subjects'],
-            $data['identifier'],
-            $data['currentTime']
-        );
-    }
-
-    public function __construct(string $type, array $subjects, string $identifier = null, int $currentTime = null)
+    public function __construct(string $type, array $subjects, string $identifier, int $expirationTimestamp)
     {
         $this->type = $type;
         $this->subjects = array_values($subjects);
-        $this->identifier = $identifier ?? (new Random)->generateRandomHexString(20);
-        $this->currentTime = $currentTime ?? $GLOBALS['EXEC_TIME'] ?? time();
+        $this->identifier = $identifier;
+        $this->expirationTimestamp = $expirationTimestamp;
     }
 
     public function jsonSerialize(): array
@@ -103,8 +87,8 @@ class VerificationRequest implements \JsonSerializable
     /**
      * @return int
      */
-    public function getCurrentTime(): int
+    public function getExpirationTimestamp(): int
     {
-        return $this->currentTime;
+        return $this->expirationTimestamp;
     }
 }

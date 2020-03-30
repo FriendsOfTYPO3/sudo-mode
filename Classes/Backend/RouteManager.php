@@ -55,7 +55,7 @@ class RouteManager
         return false;
     }
 
-    public function resolveMetaData(ServerRequestInterface $request, Route $route): ?RouteMetaData
+    public function resolveMetaData(ServerRequestInterface $request, Route $route): ?RequestMetaData
     {
         foreach ($this->handlers as $handler) {
             if (!$handler->canHandle($request, $route)) {

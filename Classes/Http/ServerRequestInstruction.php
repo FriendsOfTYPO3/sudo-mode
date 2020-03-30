@@ -21,9 +21,6 @@ use TYPO3\CMS\Core\Http\ServerRequestInstructionInterface;
 use TYPO3\CMS\Core\Http\Stream;
 use TYPO3\CMS\Core\Http\Uri;
 
-/**
- * @internal Note that this is not public API yet.
- */
 class ServerRequestInstruction implements \JsonSerializable, ServerRequestInstructionInterface
 {
     /**

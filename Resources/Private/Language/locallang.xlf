@@ -15,6 +15,9 @@
 			<trans-unit id="sudoPasswordInvalid" resname="sudoPasswordConfirm">
 				<source>Invalid password</source>
 			</trans-unit>
+			<trans-unit id="confirmationExpired" resname="confirmationExpired">
+				<source>Confirmation has expired or is invalid</source>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>

@@ -29,4 +29,9 @@ class Behavior
             'be_groups',
         ];
     }
+
+    public function getExpiration(): int
+    {
+        return 300;
+    }
 }

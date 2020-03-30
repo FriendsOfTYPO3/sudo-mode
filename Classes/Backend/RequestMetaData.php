@@ -15,12 +15,17 @@ namespace FriendsOfTYPO3\SudoMode\Backend;
  * The TYPO3 project - inspiring people to share!
  */
 
-class RouteMetaData
+class RequestMetaData implements \JsonSerializable
 {
     /**
      * @var string|null
      */
     protected $returnUrl;
+
+    public function jsonSerialize(): array
+    {
+        return get_object_vars($this);
+    }
 
     public function withReturnUrl(string $returnUrl): self
     {

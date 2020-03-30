@@ -15,8 +15,8 @@ namespace FriendsOfTYPO3\SudoMode\Hook;
  * The TYPO3 project - inspiring people to share!
  */
 
-use FriendsOfTYPO3\SudoMode\Backend\VerificationHandler;
-use FriendsOfTYPO3\SudoMode\Backend\VerificationRequest;
+use FriendsOfTYPO3\SudoMode\Backend\ConfirmationFactory;
+use FriendsOfTYPO3\SudoMode\Backend\ConfirmationHandler;
 use FriendsOfTYPO3\SudoMode\LoggerAccessorTrait;
 use FriendsOfTYPO3\SudoMode\Model\Behavior;
 use Psr\Log\LoggerAwareInterface;
@@ -39,18 +39,24 @@ class DataManipulationHook implements LoggerAwareInterface
     ];
 
     /**
-     * @var VerificationHandler
+     * @var ConfirmationFactory
      */
-    protected $verification;
+    protected $factory;
+
+    /**
+     * @var ConfirmationHandler
+     */
+    protected $handler;
 
     /**
      * @var string[]
      */
     protected $tableNames = [];
 
-    public function __construct(VerificationHandler $verification = null)
+    public function __construct(ConfirmationFactory $factory = null, ConfirmationHandler $handler = null)
     {
-        $this->verification = $verification ?? GeneralUtility::makeInstance(VerificationHandler::class);
+        $this->factory = $factory ?? GeneralUtility::makeInstance(ConfirmationFactory::class);
+        $this->handler = $handler ?? GeneralUtility::makeInstance(ConfirmationHandler::class);
         $this->tableNames = (new Behavior())->getTableNames() ?? self::TABLE_NAMES;
     }
 
@@ -79,15 +85,11 @@ class DataManipulationHook implements LoggerAwareInterface
             return;
         }
 
-        $verificationRequest = new VerificationRequest(
-            VerificationRequest::TYPE_TABLE_NAME,
-            $affectedTableNames
-        );
-
+        $confirmationBundle = $this->factory->createBundleForTableNameSubjects($affectedTableNames);
         if (!$this->shallVerifyPermission($dataHandler)) {
-            $this->logger->notice('By-passed assertion', $this->createLoggerContext($verificationRequest));
+            $this->logger->notice('By-passed assertion', $this->createLoggerContext($confirmationBundle));
             return;
         }
-        $this->verification->assertSubjects($verificationRequest, $dataHandler->BE_USER);
+        $this->handler->assertSubjects($confirmationBundle, $dataHandler->BE_USER);
     }
 }

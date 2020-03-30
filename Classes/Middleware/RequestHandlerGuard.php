@@ -15,11 +15,12 @@ namespace FriendsOfTYPO3\SudoMode\Middleware;
  * The TYPO3 project - inspiring people to share!
  */
 
+use FriendsOfTYPO3\SudoMode\Backend\ConfirmationBundle;
 use FriendsOfTYPO3\SudoMode\Backend\RouteManager;
-use FriendsOfTYPO3\SudoMode\Backend\VerificationController;
-use FriendsOfTYPO3\SudoMode\Backend\VerificationException;
-use FriendsOfTYPO3\SudoMode\Backend\VerificationHandler;
-use FriendsOfTYPO3\SudoMode\Backend\VerificationRequest;
+use FriendsOfTYPO3\SudoMode\Backend\ConfirmationController;
+use FriendsOfTYPO3\SudoMode\Backend\ConfirmationException;
+use FriendsOfTYPO3\SudoMode\Backend\ConfirmationHandler;
+use FriendsOfTYPO3\SudoMode\Http\ServerRequestInstruction;
 use FriendsOfTYPO3\SudoMode\LoggerAccessorTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -36,17 +37,26 @@ use TYPO3\CMS\Core\Http\RedirectResponse;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
- * @internal Note that this is not public API yet.
+ * Middleware catching and handling Sudo Mode confirmation requests.
  */
 class RequestHandlerGuard implements MiddlewareInterface, LoggerAwareInterface
 {
     use LoggerAwareTrait;
     use LoggerAccessorTrait;
 
+    /**
+     * @var ConfirmationHandler
+     */
+    protected $confirmationHandler;
+
+    /**
+     * @var RouteManager
+     */
     protected $routeManager;
 
-    public function __construct(RouteManager $routeManager = null)
+    public function __construct(ConfirmationHandler $confirmationHandler = null, RouteManager $routeManager = null)
     {
+        $this->confirmationHandler = $confirmationHandler ?? GeneralUtility::makeInstance(ConfirmationHandler::class);
         $this->routeManager = $routeManager ?? GeneralUtility::makeInstance(RouteManager::class);
     }
 
@@ -57,13 +67,16 @@ class RequestHandlerGuard implements MiddlewareInterface, LoggerAwareInterface
 
         try {
             return $handler->handle($request);
-        } catch (VerificationException $exception) {
-            $verificationRequest = $exception->getVerificationRequest();
-            $loggerContext = $this->createLoggerContext($route, $verificationRequest, $this->getBackendUser());
+        } catch (ConfirmationException $exception) {
+            $bundle = $exception->getConfirmationBundle();
+            $loggerContext = $this->createLoggerContext($route, $bundle, $this->getBackendUser());
 
             if ($shallGuard) {
                 $this->logger->info('Handled verification request', $loggerContext);
-                return $this->handle($request, $route, $exception->getVerificationRequest());
+                $bundle = $bundle
+                    ->withRequestInstruction(ServerRequestInstruction::fromServerRequest($request))
+                    ->withRequestMetaData($this->routeManager->resolveMetaData($request, $route));
+                return $this->handle($bundle);
             }
 
             $this->logger->notice('Unhandled verification request', $loggerContext);
@@ -71,13 +84,12 @@ class RequestHandlerGuard implements MiddlewareInterface, LoggerAwareInterface
         }
     }
 
-    protected function handle(ServerRequestInterface $request, Route $route, VerificationRequest $verificationRequest)
+    protected function handle(ConfirmationBundle $bundle): ResponseInterface
     {
-        GeneralUtility::makeInstance(VerificationHandler::class)
-            ->commitRequestInstruction($verificationRequest, $this->getBackendUser(), $request);
-        $routeMetaData = $this->routeManager->resolveMetaData($request, $route);
-        $uri = GeneralUtility::makeInstance(VerificationController::class)
-            ->buildUriForRequestAction($verificationRequest, $routeMetaData->getReturnUrl());
+        $this->confirmationHandler
+            ->commitConfirmationBundle($bundle, $this->getBackendUser());
+        $uri = GeneralUtility::makeInstance(ConfirmationController::class)
+            ->buildActionUriFromBundle('request', $bundle);
         return GeneralUtility::makeInstance(RedirectResponse::class, $uri, 401);
     }
 

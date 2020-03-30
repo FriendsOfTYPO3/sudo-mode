@@ -19,24 +19,24 @@ namespace FriendsOfTYPO3\SudoMode\Backend;
  * Exception used to signal that confirmation using user's password
  * is required in order to actually execute the current command.
  */
-class VerificationException extends \RuntimeException
+class ConfirmationException extends \RuntimeException
 {
     /**
-     * @var VerificationRequest
+     * @var ConfirmationBundle
      */
-    protected $verificationRequest;
+    protected $confirmationBundle;
 
-    public function setVerificationRequest(VerificationRequest $verificationRequest): self
+    public function setConfirmationBundle(ConfirmationBundle $confirmationBundle): self
     {
-        $this->verificationRequest = $verificationRequest;
+        $this->confirmationBundle = $confirmationBundle;
         return $this;
     }
 
     /**
-     * @return VerificationRequest
+     * @return ConfirmationBundle
      */
-    public function getVerificationRequest(): VerificationRequest
+    public function getConfirmationBundle(): ConfirmationBundle
     {
-        return $this->verificationRequest;
+        return $this->confirmationBundle;
     }
 }
