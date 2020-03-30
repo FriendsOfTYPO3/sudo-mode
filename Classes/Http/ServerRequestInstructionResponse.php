@@ -16,9 +16,10 @@ namespace FriendsOfTYPO3\SudoMode\Http;
  */
 
 use TYPO3\CMS\Core\Http\NullResponse;
+use TYPO3\CMS\Core\Http\ServerRequestInstructionAwareInterface;
 use TYPO3\CMS\Core\Http\ServerRequestInstructionInterface;
 
-class ServerRequestInstructionResponse extends NullResponse implements \TYPO3\CMS\Core\Http\ServerRequestInstructionAwareInterface
+class ServerRequestInstructionResponse extends NullResponse implements ServerRequestInstructionAwareInterface
 {
     /**
      * @var ServerRequestInstructionInterface
