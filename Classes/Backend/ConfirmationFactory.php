@@ -16,7 +16,7 @@ namespace FriendsOfTYPO3\SudoMode\Backend;
  */
 
 use FriendsOfTYPO3\SudoMode\Http\ServerRequestInstruction;
-use FriendsOfTYPO3\SudoMode\Model\Behavior;
+use FriendsOfTYPO3\SudoMode\Configuration\Behavior;
 use TYPO3\CMS\Core\Crypto\Random;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 

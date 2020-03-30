@@ -1,0 +1,5 @@
+# cat=Confirmation; type=int+; label=Confirmation Expiration:Remember password confirmation for this amount of seconds
+expiration = 300
+
+# cat=Confirmation; type=string; label=Table Names:Database table names that require confirmation prior to be modified (be_users and be_groups are always processed)
+tableNames = be_users,be_groups,sys_file_storage

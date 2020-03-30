@@ -18,7 +18,7 @@ namespace FriendsOfTYPO3\SudoMode\Hook;
 use FriendsOfTYPO3\SudoMode\Backend\ConfirmationFactory;
 use FriendsOfTYPO3\SudoMode\Backend\ConfirmationHandler;
 use FriendsOfTYPO3\SudoMode\LoggerAccessorTrait;
-use FriendsOfTYPO3\SudoMode\Model\Behavior;
+use FriendsOfTYPO3\SudoMode\Configuration\Behavior;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
