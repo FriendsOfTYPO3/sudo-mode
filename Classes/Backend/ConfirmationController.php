@@ -15,6 +15,7 @@ namespace FriendsOfTYPO3\SudoMode\Backend;
  * The TYPO3 project - inspiring people to share!
  */
 
+use FriendsOfTYPO3\SudoMode\Http\ServerRequestInstructionResponse;
 use FriendsOfTYPO3\SudoMode\LoggerAccessorTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -27,7 +28,6 @@ use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Http\HtmlResponse;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Http\RedirectResponse;
-use TYPO3\CMS\Core\Http\ServerRequestInstructionException;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Mvc\View\ViewInterface;
 use TYPO3\CMS\Fluid\View\StandaloneView;
@@ -66,11 +66,6 @@ class ConfirmationController implements LoggerAwareInterface
         $this->user = $user ?? $GLOBALS['BE_USER'];
     }
 
-    /**
-     * @param ServerRequestInterface $request
-     * @return ResponseInterface
-     * @throws ServerRequestInstructionException
-     */
     public function mainAction(ServerRequestInterface $request): ResponseInterface
     {
         $parameters = $this->resolveUriParameters($request);
@@ -112,12 +107,6 @@ class ConfirmationController implements LoggerAwareInterface
         return new JsonResponse([], 500);
     }
 
-    /**
-     * @param ServerRequestInterface $request
-     * @param ConfirmationBundle $bundle
-     * @return ResponseInterface
-     * @throws ServerRequestInstructionException
-     */
     protected function verifyAction(ServerRequestInterface $request, ConfirmationBundle $bundle): ResponseInterface
     {
         $confirmationPassword = (string)($request->getParsedBody()['confirmationPassword'] ?? '');
@@ -127,7 +116,7 @@ class ConfirmationController implements LoggerAwareInterface
             if ($this->isValidPassword($confirmationPassword)) {
                 $this->handler->grantSubjects($bundle, $this->user);
                 $this->logger->info('Password verification succeeded', $loggerContext);
-                throw new ServerRequestInstructionException($bundle->getRequestInstruction());
+                return new ServerRequestInstructionResponse($bundle->getRequestInstruction());
             }
 
             $this->logger->warning('Password verification failed', $loggerContext);
