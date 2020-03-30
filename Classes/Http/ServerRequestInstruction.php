@@ -17,11 +17,10 @@ namespace FriendsOfTYPO3\SudoMode\Http;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
-use TYPO3\CMS\Core\Http\ServerRequestInstructionInterface;
 use TYPO3\CMS\Core\Http\Stream;
 use TYPO3\CMS\Core\Http\Uri;
 
-class ServerRequestInstruction implements \JsonSerializable, ServerRequestInstructionInterface
+class ServerRequestInstruction implements \JsonSerializable
 {
     /**
      * @var string

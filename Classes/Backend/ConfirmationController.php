@@ -15,7 +15,7 @@ namespace FriendsOfTYPO3\SudoMode\Backend;
  * The TYPO3 project - inspiring people to share!
  */
 
-use FriendsOfTYPO3\SudoMode\Http\ServerRequestInstructionResponse;
+use FriendsOfTYPO3\SudoMode\Http\ServerRequestInstructionException;
 use FriendsOfTYPO3\SudoMode\LoggerAccessorTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -116,7 +116,7 @@ class ConfirmationController implements LoggerAwareInterface
             if ($this->isValidPassword($confirmationPassword)) {
                 $this->handler->grantSubjects($bundle, $this->user);
                 $this->logger->info('Password verification succeeded', $loggerContext);
-                return new ServerRequestInstructionResponse($bundle->getRequestInstruction());
+                throw new ServerRequestInstructionException($bundle->getRequestInstruction());
             }
 
             $this->logger->warning('Password verification failed', $loggerContext);

@@ -21,6 +21,7 @@ use FriendsOfTYPO3\SudoMode\Backend\ConfirmationController;
 use FriendsOfTYPO3\SudoMode\Backend\ConfirmationException;
 use FriendsOfTYPO3\SudoMode\Backend\ConfirmationHandler;
 use FriendsOfTYPO3\SudoMode\Http\ServerRequestInstruction;
+use FriendsOfTYPO3\SudoMode\Http\ServerRequestInstructionException;
 use FriendsOfTYPO3\SudoMode\LoggerAccessorTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -34,6 +35,7 @@ use TYPO3\CMS\Backend\Routing\Router;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Http\RedirectResponse;
+use TYPO3\CMS\Core\Http\ServerRequestFactory;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
@@ -60,6 +62,10 @@ class RequestHandlerGuard implements MiddlewareInterface, LoggerAwareInterface
             return $handler->handle($request);
         } catch (ConfirmationException $exception) {
             return $this->handleConfirmationException($exception, $request);
+        } catch (ServerRequestInstructionException $exception) {
+            $request = ServerRequestFactory::fromGlobals();
+            $request = $exception->getInstruction()->applyTo($request);
+            return $handler->handle($request);
         }
     }
 
@@ -95,13 +101,10 @@ class RequestHandlerGuard implements MiddlewareInterface, LoggerAwareInterface
 
     protected function resolveRoute(ServerRequestInterface $request): ?Route
     {
-        $route = $request->getAttribute('route', null);
-        if ($route !== null) {
-            return $route;
-        }
         try {
+            $routePath = $request->getQueryParams()['route'] ?? '';
             $router = GeneralUtility::makeInstance(Router::class);
-            return $router->matchRequest($request);
+            return $router->match($routePath);
         } catch (ResourceNotFoundException $exception) {
             return null;
         }
