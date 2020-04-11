@@ -17,6 +17,9 @@
     "issues": "https://github.com/FriendsOfTYPO3/sudo-mode/issues"
   },
   "require": {
+    "ext-dom": "*",
+    "ext-libxml": "*",
+    "ext-xml": "*",
     "typo3/cms-core": "^9.5 || 10.4.x@dev"
   },
   "autoload": {
