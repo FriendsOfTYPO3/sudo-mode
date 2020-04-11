@@ -28,6 +28,7 @@ use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Http\HtmlResponse;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Http\RedirectResponse;
+use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Mvc\View\ViewInterface;
 use TYPO3\CMS\Fluid\View\StandaloneView;
@@ -211,10 +212,12 @@ class ConfirmationController implements LoggerAwareInterface
     protected function createView(string $templateName): ViewInterface
     {
         $view = GeneralUtility::makeInstance(StandaloneView::class);
-        $templatePath = GeneralUtility::getFileAbsFileName(
-            sprintf('EXT:sudo_mode/Resources/Private/Templates/Backend/%s.html', $templateName)
-        );
-        $view->setTemplatePathAndFilename($templatePath);
+        $view->setTemplate($templateName);
+        $templatePaths = $view->getTemplatePaths();
+        $resourcesPath = ExtensionManagementUtility::extPath('sudo_mode') . 'Resources/Private/';
+        $templatePaths->setLayoutRootPaths([$resourcesPath . 'Layouts/Backend/']);
+        $templatePaths->setPartialRootPaths([$resourcesPath . 'Partials/Backend/']);
+        $templatePaths->setTemplateRootPaths([$resourcesPath . 'Templates/Backend/']);
         return $view;
     }
 
