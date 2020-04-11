@@ -15,39 +15,21 @@ namespace FriendsOfTYPO3\SudoMode\Backend;
  * The TYPO3 project - inspiring people to share!
  */
 
-use TYPO3\CMS\Backend\LoginProvider\UsernamePasswordLoginProvider;
-use TYPO3\CMS\Core\Page\PageRenderer;
+use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Object\ObjectManager;
-use TYPO3\CMS\Extbase\Object\ObjectManagerInterface;
-use TYPO3\CMS\Extbase\SignalSlot\Dispatcher;
+use TYPO3\CMS\Rsaauth\RsaEncryptionEncoder;
 
 /**
  * Aims to adapt external services or extensions to be working with `ext:sudo_mode`.
  */
 class ExternalServiceAdapter
 {
-    public function emitLoginProviderSignal(PageRenderer $pageRenderer = null): void
+    public function applyRsaAuthModules(): void
     {
-        $this->getSignalSlotDispatcher()->dispatch(
-            UsernamePasswordLoginProvider::class,
-            UsernamePasswordLoginProvider::SIGNAL_getPageRenderer,
-            [$pageRenderer ?? $this->getPageRenderer()]
-        );
-    }
-
-    public function getSignalSlotDispatcher(): Dispatcher
-    {
-        return $this->getObjectManager()->get(Dispatcher::class);
-    }
-
-    public function getObjectManager(): ObjectManagerInterface
-    {
-        return GeneralUtility::makeInstance(ObjectManager::class);
-    }
-
-    public function getPageRenderer(): PageRenderer
-    {
-        return GeneralUtility::makeInstance(PageRenderer::class);
+        if (!ExtensionManagementUtility::isLoaded('rsaauth')) {
+            return;
+        }
+        $rsaEncryptionEncoder = GeneralUtility::makeInstance(RsaEncryptionEncoder::class);
+        $rsaEncryptionEncoder->enableRsaEncryption(true);
     }
 }
