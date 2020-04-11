@@ -114,7 +114,7 @@ class ConfirmationController implements LoggerAwareInterface
      */
     protected function applyAdditionalJavaScriptModules(): void
     {
-        (GeneralUtility::makeInstance(ExternalServiceAdapter::class))->emitLoginProviderSignal();
+        (GeneralUtility::makeInstance(ExternalServiceAdapter::class))->applyRsaAuthModules();
     }
 
     protected function verifyAction(ServerRequestInterface $request, ConfirmationBundle $bundle): ResponseInterface
