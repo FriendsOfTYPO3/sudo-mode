@@ -65,6 +65,9 @@ class RequestHandlerGuard implements MiddlewareInterface, LoggerAwareInterface
         } catch (ServerRequestInstructionException $exception) {
             $request = ServerRequestFactory::fromGlobals();
             $request = $exception->getInstruction()->applyTo($request);
+            // populate request aspects to super globals
+            $_GET = $request->getQueryParams() ?? [];
+            $_POST = $request->getParsedBody() ?? [];
             return $handler->handle($request);
         }
     }
