@@ -102,6 +102,7 @@ class ConfirmationController implements LoggerAwareInterface
             if (!empty($bundle->getRequestMetaData()->getReturnUrl())) {
                 $view->assign('cancelUri', (string)$this->buildActionUriFromBundle('cancel', $bundle));
             }
+            $this->applyAdditionalJavaScriptModules();
             return new HtmlResponse($view->render());
         }
         // @todo Add JSON handling
@@ -109,22 +110,19 @@ class ConfirmationController implements LoggerAwareInterface
     }
 
     /**
-     * @todo ext:rsaauth not working yet in TYPO3 v9, extract to optional "controller enhancer"
+     * Load additional JavaScript modules/libraries (e.g. required for `ext:rsaauth` in TYPO3 v9)
      */
-    protected function applyRsaAuth()
+    protected function applyAdditionalJavaScriptModules(): void
     {
-        $isEnabled = ($GLOBALS['TYPO3_CONF_VARS']['BE']['loginSecurityLevel'] ?? '') === 'rsa';
-        if (!$isEnabled) {
-            return;
-        }
-        $rsaEncryptionEncoder = GeneralUtility::makeInstance(\TYPO3\CMS\Rsaauth\RsaEncryptionEncoder::class);
-        $rsaEncryptionEncoder->enableRsaEncryption(true);
-        // PageRender contains JavaScript libs and inline code...
+        (GeneralUtility::makeInstance(ExternalServiceAdapter::class))->emitLoginProviderSignal();
     }
 
     protected function verifyAction(ServerRequestInterface $request, ConfirmationBundle $bundle): ResponseInterface
     {
-        $confirmationPassword = (string)($request->getParsedBody()['confirmationPassword'] ?? '');
+        $parsedBody = $request->getParsedBody();
+        $confirmationPassword = empty($parsedBody['confirmationPasswordInternal'])
+            ? (string)($parsedBody['confirmationPassword'] ?? '') // default field
+            : $parsedBody['confirmationPasswordInternal']; // filled e.g. by `ext:rsaauth`
         $loggerContext = $this->createLoggerContext($bundle, $this->user);
 
         if (!$this->isJsonRequest($request)) {

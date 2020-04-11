@@ -29,7 +29,10 @@
                         <f:form id="confirm-sudo" class="form" method="post" actionUri="{verifyUri}">
                             <div class="form-group">
                                 <div class="form-control-holder">
-                                    <f:form.password name="confirmationPassword" class="form-control" placeholder="Password" />
+                                    <f:form.password name="confirmationPassword" class="form-control" placeholder="Password"
+                                                     additionalAttributes="{data-rsa-encryption: 'confirmationPasswordInternal'}" />
+                                    <!-- Internal password field, e.g. used for ext:rsaauth -->
+                                    <f:form.hidden name="confirmationPasswordInternal" id="confirmationPasswordInternal" />
                                 </div>
                             </div>
                         </f:form>
