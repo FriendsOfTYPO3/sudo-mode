@@ -49,7 +49,7 @@ like shown in the following example (writer configuration and file names can be 
             'writerConfiguration' => [
                 \TYPO3\CMS\Core\Log\LogLevel::INFO => [
                     \TYPO3\CMS\Core\Log\Writer\FileWriter::class => [
-                        'logFile' => 'typo3temp/var/log/sudoMode.log'
+                        'logFileInfix' => 'sudo'
                     ],
                 ],
             ],
