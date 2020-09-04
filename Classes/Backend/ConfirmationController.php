@@ -180,18 +180,20 @@ class ConfirmationController implements LoggerAwareInterface
     {
         return $this->buildActionUri(
             $actionName,
-            $bundle->getRequestMetaData()->getReturnUrl(),
             $bundle->getIdentifier(),
+            $bundle->getRequestMetaData()->getReturnUrl(),
+            $bundle->getRequestMetaData()->getScope(),
             $flags
         );
     }
 
-    protected function buildActionUri(string $actionName, string $returnUrl, string $bundleIdentifier, int $flags = null): UriInterface
+    protected function buildActionUri(string $actionName, string $bundleIdentifier, string $returnUrl = null, string $scope = null,  int $flags = null): UriInterface
     {
         $parameters = [
             'action' => $actionName,
-            'returnUrl' => $returnUrl,
             'bundle' => $bundleIdentifier,
+            'returnUrl' => $returnUrl,
+            'scope' => $scope,
             'flags' => $flags,
         ];
         $parameters['hmac'] = $this->signParameters($parameters);
@@ -211,7 +213,7 @@ class ConfirmationController implements LoggerAwareInterface
 
     protected function filterParameters(array $parameters): array
     {
-        return array_intersect_key($parameters, array_flip(['action', 'returnUrl', 'bundle', 'flags', 'hmac']));
+        return array_intersect_key($parameters, array_flip(['action', 'bundle', 'returnUrl', 'scope', 'flags', 'hmac']));
     }
 
     protected function signParameters(array $parameters): string
