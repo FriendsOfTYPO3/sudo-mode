@@ -100,8 +100,17 @@ class ConfirmationFactory
     public function createRequestMetaDataFromArray(array $data): RequestMetaData
     {
         $target = GeneralUtility::makeInstance(RequestMetaData::class);
+        if (isset($data['scope'])) {
+            $target = $target->withScope($data['scope']);
+        }
         if (isset($data['returnUrl'])) {
             $target = $target->withReturnUrl($data['returnUrl']);
+        }
+        if (isset($data['eventName'])) {
+            $target = $target->withEventName($data['eventName']);
+        }
+        if (isset($data['jsonData'])) {
+            $target = $target->withJsonData($data['jsonData']);
         }
         return $target;
     }

@@ -20,11 +20,33 @@ class RequestMetaData implements \JsonSerializable
     /**
      * @var string|null
      */
+    protected $scope;
+
+    /**
+     * @var string|null
+     */
     protected $returnUrl;
+
+    /**
+     * @var string|null
+     */
+    protected $eventName;
+
+    /**
+     * @var array|null
+     */
+    protected $jsonData;
 
     public function jsonSerialize(): array
     {
         return get_object_vars($this);
+    }
+
+    public function withScope(string $scope): self
+    {
+        $target = clone $this;
+        $target->scope = $scope;
+        return $target;
     }
 
     public function withReturnUrl(string $returnUrl): self
@@ -34,11 +56,49 @@ class RequestMetaData implements \JsonSerializable
         return $target;
     }
 
+    public function withEventName(string $eventName): self
+    {
+        $target = clone $this;
+        $target->eventName = $eventName;
+        return $target;
+    }
+
+    public function withJsonData(array $jsonData): self
+    {
+        $target = clone $this;
+        $target->jsonData = $jsonData;
+        return $target;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getScope(): ?string
+    {
+        return $this->scope;
+    }
+
     /**
      * @return string|null
      */
     public function getReturnUrl(): ?string
     {
         return $this->returnUrl;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getEventName(): ?string
+    {
+        return $this->eventName;
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getJsonData(): ?array
+    {
+        return $this->jsonData;
     }
 }
