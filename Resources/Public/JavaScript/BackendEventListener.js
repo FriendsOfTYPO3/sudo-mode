@@ -7,8 +7,7 @@ define(
         'use strict';
 
         function handle(evt) {
-            let action = resolveAction(evt);
-            new EventHandler(action, evt.detail.payload).handle();
+            new EventHandler(evt.detail.payload).handle();
         }
 
         function resolveAction(evt) {
@@ -22,7 +21,7 @@ define(
             }
         }
 
-        document.addEventListener('typo3:ajax-data-handler:toggle-process-failed', handle);
-        document.addEventListener('typo3:ajax-data-handler:delete-process-failed', handle);
+        document.addEventListener('typo3:ajax-data-handler:process-failed', handle);
+        document.addEventListener('typo3:ajax-data-handler:process-failed', handle);
     }
 );

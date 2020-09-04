@@ -16,9 +16,9 @@ define(
             console.info('BroadcastService or BroadcastMessage not found, which is fine in TYPO3 v9');
         }
 
-        function EventHandler(action, message) {
-            this.action = action;
+        function EventHandler(message) {
             this.message = message;
+            this.action = message.action;
             this.response = message.response;
             this.processToken = message.processToken;
             this.modal = null;
