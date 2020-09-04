@@ -124,7 +124,17 @@ class ConfirmationController implements LoggerAwareInterface
             return new HtmlResponse($view->render());
         }
         // @todo Add JSON handling
-        return new JsonResponse([], 500);
+        return new JsonResponse([
+            'formId' => 'confirm-sudo',
+            'invalidId' => 'invalid-sudo',
+            'severity' => 1, // warning in Modal/Severity,
+            'title' => $this->resolveLabel('sudoPasswordConfirm'),
+            'content' => $this->reduceSpaces($view->render()),
+            'buttons' => [
+                'cancel' => $this->resolveLabel('cancel'),
+                'confirm' => $this->resolveLabel('confirm'),
+            ],
+        ], 200);
     }
 
     /**
@@ -138,24 +148,30 @@ class ConfirmationController implements LoggerAwareInterface
     protected function verifyAction(ServerRequestInterface $request, ConfirmationBundle $bundle): ResponseInterface
     {
         $parsedBody = $request->getParsedBody();
+        $isJsonRequest = $this->isJsonRequest($request);
         $confirmationPassword = empty($parsedBody['confirmationPasswordInternal'])
             ? (string)($parsedBody['confirmationPassword'] ?? '') // default field
             : $parsedBody['confirmationPasswordInternal']; // filled e.g. by `ext:rsaauth`
         $loggerContext = $this->createLoggerContext($bundle, $this->user);
 
-        if (!$this->isJsonRequest($request)) {
-            if ($this->isValidPassword($confirmationPassword)) {
-                $this->handler->grantSubjects($bundle, $this->user);
-                $this->logger->info('Password verification succeeded', $loggerContext);
+        if ($this->isValidPassword($confirmationPassword)) {
+            $this->handler->grantSubjects($bundle, $this->user);
+            $this->logger->info('Password verification succeeded', $loggerContext);
+            if (!$isJsonRequest) {
                 throw new ServerRequestInstructionException($bundle->getRequestInstruction());
+            } else {
+                return new JsonResponse(['status' => true], 200);
             }
-
-            $this->logger->warning('Password verification failed', $loggerContext);
-            $uri = $this->buildActionUriFromBundle('request', $bundle, self::FLAG_INVALID_PASSWORD);
-            return new RedirectResponse($uri, 401);
         }
-        // @todo Add JSON handling
-        return new JsonResponse([], 500);
+
+        $this->logger->warning('Password verification failed', $loggerContext);
+        $uri = $this->buildActionUriFromBundle('request', $bundle, self::FLAG_INVALID_PASSWORD);
+
+        if (!$isJsonRequest) {
+            return new RedirectResponse($uri, 401);
+        } else {
+            return new JsonResponse(['status' => false], 401);
+        }
     }
 
     protected function cancelAction(ServerRequestInterface $request, ConfirmationBundle $bundle): ResponseInterface
