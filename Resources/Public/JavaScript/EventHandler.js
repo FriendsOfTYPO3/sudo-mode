@@ -17,6 +17,7 @@ define(
         }
 
         function EventHandler(message) {
+            this.canCancel = true;
             this.message = message;
             this.action = message.action;
             this.response = message.response;
@@ -52,7 +53,11 @@ define(
                         btnClass: 'btn-default',
                         text: instruction.button.cancel,
                         trigger: function(evt) {
-                            that.cancelAction(instruction);
+                            if (that.canCancel) {
+                                that.cancelAction(instruction);
+                                that.broadcast('revert');
+                            }
+                            that.modal.trigger('modal-dismiss');
                         }
                     },
                     {
@@ -63,6 +68,15 @@ define(
                         }
                     },
                 ],
+            }).on('hidden.bs.modal', function(evt) {
+                if (that.canCancel) {
+                    that.cancelAction(instruction);
+                    that.broadcast('revert');
+                }
+                // remove memory reference with next tick
+                setTimeout(function() {
+                    that.modal = null;
+                }, 0);
             });
         }
 
@@ -93,23 +107,23 @@ define(
                 processData: false,
                 contentType: false
             }).done(function(response, status, xhr) {
-                that.modal.trigger('modal-dismiss');
+                that.canCancel = false;
                 that.broadcast(that.action);
+                that.modal.trigger('modal-dismiss');
             }).fail(function(xhr, status, error) {
                 $invalid.show();
             });
         }
 
         EventHandler.prototype.cancelAction = function(instruction) {
+            this.canCancel = false;
             const that = this;
             $.ajax({
                 method: 'GET',
                 url: instruction.uri.cancel
-            }).done(function(response, status, xhr) {
-                that.modal.trigger('modal-dismiss');
-                that.broadcast('revert');
             }).fail(function(xhr, status, error) {
                 console.warn('Cancel action failed: ' + error);
+                that.canCancel = true;
             })
         }
 
