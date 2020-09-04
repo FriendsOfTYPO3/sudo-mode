@@ -170,7 +170,9 @@ class ConfirmationController implements LoggerAwareInterface
     protected function errorAction(ServerRequestInterface $request): ResponseInterface
     {
         $view = $this->createView('Error');
-        $view->assign('returnUrl', $request->getQueryParams()['returnUrl'] ?? '');
+        $view->assignMultiple([
+            'returnUrl' => $request->getQueryParams()['returnUrl'] ?? '',
+        ]);
         return new HtmlResponse($view->render());
     }
 
