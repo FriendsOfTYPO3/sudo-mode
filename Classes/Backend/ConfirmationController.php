@@ -123,7 +123,6 @@ class ConfirmationController implements LoggerAwareInterface
             $this->applyAdditionalJavaScriptModules();
             return new HtmlResponse($view->render());
         }
-        // @todo Add JSON handling
         return new JsonResponse([
             'formId' => 'confirm-sudo',
             'invalidId' => 'invalid-sudo',
