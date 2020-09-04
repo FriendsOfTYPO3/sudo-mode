@@ -15,7 +15,8 @@ namespace FriendsOfTYPO3\SudoMode\Backend;
  * The TYPO3 project - inspiring people to share!
  */
 
-use FriendsOfTYPO3\SudoMode\Scope\CoreRouteHandler;
+use FriendsOfTYPO3\SudoMode\Scope\CoreHtmlRouteHandler;
+use FriendsOfTYPO3\SudoMode\Scope\CoreJsonRouteHandler;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Routing\Route;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -24,10 +25,11 @@ class RouteManager
 {
     /**
      * @var RouteHandlerInterface[]
-    // @todo Add possibility to register 3rd party handlers
+     * @todo Add possibility to register 3rd party handlers
      */
     protected $handlerClassNames = [
-        CoreRouteHandler::class,
+        CoreHtmlRouteHandler::class,
+        CoreJsonRouteHandler::class,
     ];
 
     /**

@@ -22,12 +22,9 @@ use TYPO3\CMS\Backend\Routing\Route;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
-class CoreRouteHandler implements RouteHandlerInterface
+class CoreHtmlRouteHandler implements RouteHandlerInterface
 {
-    /**
-     * @var \Closure[]
-     */
-    protected $handlers;
+    use RouteHandlerTrait;
 
     public function __construct()
     {
@@ -71,11 +68,8 @@ class CoreRouteHandler implements RouteHandlerInterface
     {
         $routePath = $this->normalizeRoutePath($route);
         $returnUrl = $this->handlers[$routePath]($route, $request);
-        return (new RequestMetaData())->withReturnUrl($returnUrl);
-    }
-
-    protected function normalizeRoutePath(Route $route): string
-    {
-        return rtrim($route->getPath(), '/');
+        return (new RequestMetaData())
+            ->withScope('html')
+            ->withReturnUrl($returnUrl);
     }
 }
