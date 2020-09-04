@@ -24,4 +24,5 @@ define(
 
         document.addEventListener('typo3:ajax-data-handler:toggle-process-failed', handle);
         document.addEventListener('typo3:ajax-data-handler:delete-process-failed', handle);
-    });
+    }
+);

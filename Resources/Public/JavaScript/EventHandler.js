@@ -3,16 +3,13 @@
  */
 define(
     [
-            'require',
-            'exports',
-            'jquery',
-            'TYPO3/CMS/Backend/Modal',
-            'TYPO3/CMS/Backend/Severity',
-            // opt(ional) modules using loader plugin
-            'TYPO3/CMS/SudoMode/opt!TYPO3/CMS/Backend/BroadcastService',
-            'TYPO3/CMS/SudoMode/opt!TYPO3/CMS/Backend/BroadcastMessage',
+        'jquery',
+        'TYPO3/CMS/Backend/Modal',
+        // opt(ional) modules using loader plugin
+        'TYPO3/CMS/SudoMode/opt!TYPO3/CMS/Backend/BroadcastService',
+        'TYPO3/CMS/SudoMode/opt!TYPO3/CMS/Backend/BroadcastMessage',
     ],
-    function (require, exports, $, Modal, Severity, broadcastService, BroadcastMessageModule) {
+    function ($, Modal, broadcastService, BroadcastMessageModule) {
         'use strict';
 
         if (!broadcastService || !BroadcastMessageModule) {
@@ -123,4 +120,5 @@ define(
         }
 
         return EventHandler;
-    });
+    }
+);
