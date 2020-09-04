@@ -21,6 +21,7 @@ define(
             this.message = message;
             this.response = message.response;
             this.processToken = message.processToken;
+            this.modal = null;
         }
 
         EventHandler.prototype.handle = function() {
@@ -36,12 +37,12 @@ define(
             let $form = $content.find('#' + instruction.formId)
                 .on('submit', function(evt) {
                     evt.preventDefault();
-                    that.verifyAction($form, $invalid);
+                    that.verifyAction(instruction, $form, $invalid);
                 });
             let $invalid = $content.find('#' + instruction.invalidId)
                 .hide();
 
-            const modal = Modal.advanced({
+            this.modal = Modal.advanced({
                 type: Modal.types.default,
                 title: instruction.title,
                 content: $content,
@@ -49,17 +50,14 @@ define(
                 buttons: [
                     {
                         btnClass: 'btn-default',
-                        text: instruction.buttons.cancel,
+                        text: instruction.button.cancel,
                         trigger: function(evt) {
-                            Modal.currentModal.trigger('modal-dismiss');
-                            // @todo cancel bundle
-                            // -> callback to server
-                            // -> cancelUri
+                            that.cancelAction(instruction);
                         }
                     },
                     {
                         btnClass: 'btn-warning',
-                        text: instruction.buttons.confirm,
+                        text: instruction.button.confirm,
                         trigger: function(evt) {
                             $form.submit();
                         }
@@ -84,23 +82,35 @@ define(
             });
         }
 
-        EventHandler.prototype.verifyAction = function($form, $invalid) {
+        EventHandler.prototype.verifyAction = function(instruction, $form, $invalid) {
             const that = this;
-            let submitUri = $form.attr('action');
             let formData = new FormData($form.get(0));
             $invalid.hide();
             $.ajax({
                 method: 'POST',
-                url: submitUri,
+                url: instruction.uri.verify,
                 data: formData,
                 processData: false,
                 contentType: false
             }).done(function(response, status, xhr) {
-                Modal.currentModal.trigger('modal-dismiss');
+                that.modal.trigger('modal-dismiss');
                 that.broadcast(that.action);
             }).fail(function(xhr, status, error) {
                 $invalid.show();
             });
+        }
+
+        EventHandler.prototype.cancelAction = function(instruction) {
+            const that = this;
+            $.ajax({
+                method: 'GET',
+                url: instruction.uri.cancel
+            }).done(function(response, status, xhr) {
+                that.modal.trigger('modal-dismiss');
+                that.broadcast('revert');
+            }).fail(function(xhr, status, error) {
+                console.warn('Cancel action failed: ' + error);
+            })
         }
 
         EventHandler.prototype.broadcast = function(action) {

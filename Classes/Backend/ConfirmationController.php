@@ -107,16 +107,20 @@ class ConfirmationController implements LoggerAwareInterface
         $isJsonRequest = $this->isJsonRequest($request);
         $flags = (int)($request->getQueryParams()['flags'] ?? 0);
 
+        $verifyUri = (string)$this->buildActionUriFromBundle('verify', $bundle);
+        $cancelUri = (string)$this->buildActionUriFromBundle('cancel', $bundle);
+
         $view = $this->createView('Request');
         $view->assignMultiple([
             'bundle' => $bundle,
-            'verifyUri' => (string)$this->buildActionUriFromBundle('verify', $bundle),
+            'verifyUri' => $isJsonRequest ? '#' : $verifyUri,
             'flagInvalidPassword' => $flags & self::FLAG_INVALID_PASSWORD,
             'layout' => $isJsonRequest ? 'None' : 'Module',
             'isJsonRequest' => $isJsonRequest,
         ]);
+        // @todo Cannot cancel without knowing where to redirect to afterwards
         if (!empty($bundle->getRequestMetaData()->getReturnUrl())) {
-            $view->assign('cancelUri', (string)$this->buildActionUriFromBundle('cancel', $bundle));
+            $view->assign('cancelUri', $cancelUri);
         }
 
         if (!$isJsonRequest) {
@@ -129,7 +133,11 @@ class ConfirmationController implements LoggerAwareInterface
             'severity' => 1, // warning in Modal/Severity,
             'title' => $this->resolveLabel('sudoPasswordConfirm'),
             'content' => $this->reduceSpaces($view->render()),
-            'buttons' => [
+            'uri' => [
+                'verify' => $verifyUri,
+                'cancel' => $cancelUri,
+            ],
+            'button' => [
                 'cancel' => $this->resolveLabel('cancel'),
                 'confirm' => $this->resolveLabel('confirm'),
             ],
@@ -168,22 +176,21 @@ class ConfirmationController implements LoggerAwareInterface
 
         if (!$isJsonRequest) {
             return new RedirectResponse($uri, 401);
-        } else {
-            return new JsonResponse(['status' => false], 401);
         }
+        return new JsonResponse(['status' => false], 401);
     }
 
     protected function cancelAction(ServerRequestInterface $request, ConfirmationBundle $bundle): ResponseInterface
     {
         $loggerContext = $this->createLoggerContext($bundle, $this->user);
 
+        $this->handler->removeConfirmationBundle($bundle, $this->user);
+        $this->logger->notice('Password verification cancelled', $loggerContext);
+
         if (!$this->isJsonRequest($request)) {
-            $this->handler->removeConfirmationBundle($bundle, $this->user);
-            $this->logger->notice('Password verification cancelled', $loggerContext);
             return new RedirectResponse($bundle->getRequestMetaData()->getReturnUrl(), 401);
         }
-        // @todo Add JSON handling
-        return new JsonResponse([], 500);
+        return new JsonResponse(['status' => true], 200);
     }
 
     protected function errorAction(ServerRequestInterface $request): ResponseInterface
