@@ -28,6 +28,7 @@ use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Http\HtmlResponse;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Http\RedirectResponse;
+use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Mvc\View\ViewInterface;
@@ -42,6 +43,8 @@ class ConfirmationController implements LoggerAwareInterface
 {
     use LoggerAwareTrait;
     use LoggerAccessorTrait;
+
+    private const LANGUAGE_PREFIX = 'LLL:EXT:sudo_mode/Resources/Private/Language/locallang.xlf';
 
     protected const FLAG_INVALID_PASSWORD = 1;
 
@@ -60,10 +63,21 @@ class ConfirmationController implements LoggerAwareInterface
      */
     protected $uriBuilder;
 
-    public function __construct(ConfirmationHandler $handler = null, BackendUserAuthentication $user = null, UriBuilder $uriBuilder = null)
+    /**
+     * @var LanguageService
+     */
+    protected $languageService;
+
+    public function __construct(
+        ConfirmationHandler $handler = null,
+        BackendUserAuthentication $user = null,
+        UriBuilder $uriBuilder = null,
+        LanguageService $languageService = null
+    )
     {
         $this->handler = $handler ?? GeneralUtility::makeInstance(ConfirmationHandler::class);
         $this->uriBuilder = $uriBuilder ?? GeneralUtility::makeInstance(UriBuilder::class);
+        $this->languageService = $languageService ?? GeneralUtility::makeInstance(LanguageService::class);
         $this->user = $user ?? $GLOBALS['BE_USER'];
     }
 
@@ -281,5 +295,9 @@ class ConfirmationController implements LoggerAwareInterface
     protected function isJsonRequest(ServerRequestInterface $request): bool
     {
         return strpos($request->getHeaderLine('content-type'), 'application/json') === 0;
+
+    private function resolveLabel(string $identifier): string
+    {
+        return $this->languageService->sL(self::LANGUAGE_PREFIX . ':' . $identifier);
     }
 }
