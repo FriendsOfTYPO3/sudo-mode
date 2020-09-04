@@ -104,18 +104,22 @@ class ConfirmationController implements LoggerAwareInterface
 
     protected function requestAction(ServerRequestInterface $request, ConfirmationBundle $bundle): ResponseInterface
     {
+        $isJsonRequest = $this->isJsonRequest($request);
         $flags = (int)($request->getQueryParams()['flags'] ?? 0);
 
-        if (!$this->isJsonRequest($request)) {
-            $view = $this->createView('Request');
-            $view->assignMultiple([
-                'bundle' => $bundle,
-                'verifyUri' => (string)$this->buildActionUriFromBundle('verify', $bundle),
-                'flagInvalidPassword' => $flags & self::FLAG_INVALID_PASSWORD,
-            ]);
-            if (!empty($bundle->getRequestMetaData()->getReturnUrl())) {
-                $view->assign('cancelUri', (string)$this->buildActionUriFromBundle('cancel', $bundle));
-            }
+        $view = $this->createView('Request');
+        $view->assignMultiple([
+            'bundle' => $bundle,
+            'verifyUri' => (string)$this->buildActionUriFromBundle('verify', $bundle),
+            'flagInvalidPassword' => $flags & self::FLAG_INVALID_PASSWORD,
+            'layout' => $isJsonRequest ? 'None' : 'Module',
+            'isJsonRequest' => $isJsonRequest,
+        ]);
+        if (!empty($bundle->getRequestMetaData()->getReturnUrl())) {
+            $view->assign('cancelUri', (string)$this->buildActionUriFromBundle('cancel', $bundle));
+        }
+
+        if (!$isJsonRequest) {
             $this->applyAdditionalJavaScriptModules();
             return new HtmlResponse($view->render());
         }
@@ -298,7 +302,15 @@ class ConfirmationController implements LoggerAwareInterface
 
     protected function isJsonRequest(ServerRequestInterface $request): bool
     {
-        return strpos($request->getHeaderLine('content-type'), 'application/json') === 0;
+        return strpos($request->getHeaderLine('content-type'), 'application/json') === 0
+            || ($request->getQueryParams()['scope'] ?? null) === 'json';
+    }
+
+    protected function reduceSpaces(string $value): string
+    {
+        $value = preg_replace('#\s{2,}#', ' ', $value);
+        return trim($value);
+    }
 
     private function resolveLabel(string $identifier): string
     {
