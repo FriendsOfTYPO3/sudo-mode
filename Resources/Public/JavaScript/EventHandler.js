@@ -143,6 +143,7 @@ define(
             var instruction = {
                 action: action,
                 processToken: this.processToken,
+                parameters: this.message.parameters,
                 elementIdentifier: this.message.elementIdentifier
             };
             broadcastService.post(
