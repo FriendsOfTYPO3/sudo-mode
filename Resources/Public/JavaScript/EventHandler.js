@@ -33,14 +33,14 @@ define(
         }
 
         EventHandler.prototype.showModal = function(instruction) {
-            const that = this;
-            let $content = $(instruction.content);
-            let $form = $content.find('#' + instruction.formId)
+            var that = this;
+            var $content = $(instruction.content);
+            var $form = $content.find('#' + instruction.formId)
                 .on('submit', function(evt) {
                     evt.preventDefault();
                     that.verifyAction(instruction, $form, $invalid);
                 });
-            let $invalid = $content.find('#' + instruction.invalidId)
+            var $invalid = $content.find('#' + instruction.invalidId)
                 .hide();
 
             this.modal = Modal.advanced({
@@ -66,8 +66,8 @@ define(
                         trigger: function(evt) {
                             $form.submit();
                         }
-                    },
-                ],
+                    }
+                ]
             }).on('hidden.bs.modal', function(evt) {
                 if (that.canCancel) {
                     that.cancelAction(instruction);
@@ -86,7 +86,7 @@ define(
         }
 
         EventHandler.prototype.requestAction = function() {
-            const that = this;
+            var that = this;
             $.ajax({
                 method: 'GET',
                 dataType: 'json',
@@ -97,8 +97,8 @@ define(
         }
 
         EventHandler.prototype.verifyAction = function(instruction, $form, $invalid) {
-            const that = this;
-            let formData = new FormData($form.get(0));
+            var that = this;
+            var formData = new FormData($form.get(0));
             $invalid.hide();
             $.ajax({
                 method: 'POST',
@@ -117,7 +117,7 @@ define(
 
         EventHandler.prototype.cancelAction = function(instruction) {
             this.canCancel = false;
-            const that = this;
+            var that = this;
             $.ajax({
                 method: 'GET',
                 url: instruction.uri.cancel
@@ -128,8 +128,8 @@ define(
         }
 
         EventHandler.prototype.broadcast = function(action) {
-            const instruction = {
-                action,
+            var instruction = {
+                action: action,
                 processToken: this.processToken,
                 elementIdentifier: this.message.elementIdentifier
             };
