@@ -28,6 +28,7 @@ use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Http\HtmlResponse;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Http\RedirectResponse;
+use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Mvc\View\ViewInterface;
@@ -42,6 +43,8 @@ class ConfirmationController implements LoggerAwareInterface
 {
     use LoggerAwareTrait;
     use LoggerAccessorTrait;
+
+    private const LANGUAGE_PREFIX = 'LLL:EXT:sudo_mode/Resources/Private/Language/locallang.xlf';
 
     protected const FLAG_INVALID_PASSWORD = 1;
 
@@ -60,10 +63,21 @@ class ConfirmationController implements LoggerAwareInterface
      */
     protected $uriBuilder;
 
-    public function __construct(ConfirmationHandler $handler = null, BackendUserAuthentication $user = null, UriBuilder $uriBuilder = null)
+    /**
+     * @var LanguageService
+     */
+    protected $languageService;
+
+    public function __construct(
+        ConfirmationHandler $handler = null,
+        BackendUserAuthentication $user = null,
+        UriBuilder $uriBuilder = null,
+        LanguageService $languageService = null
+    )
     {
         $this->handler = $handler ?? GeneralUtility::makeInstance(ConfirmationHandler::class);
         $this->uriBuilder = $uriBuilder ?? GeneralUtility::makeInstance(UriBuilder::class);
+        $this->languageService = $languageService ?? GeneralUtility::makeInstance(LanguageService::class);
         $this->user = $user ?? $GLOBALS['BE_USER'];
     }
 
@@ -90,23 +104,44 @@ class ConfirmationController implements LoggerAwareInterface
 
     protected function requestAction(ServerRequestInterface $request, ConfirmationBundle $bundle): ResponseInterface
     {
+        $isJsonRequest = $this->isJsonRequest($request);
         $flags = (int)($request->getQueryParams()['flags'] ?? 0);
 
-        if (!$this->isJsonRequest($request)) {
-            $view = $this->createView('Request');
-            $view->assignMultiple([
-                'bundle' => $bundle,
-                'verifyUri' => (string)$this->buildActionUriFromBundle('verify', $bundle),
-                'flagInvalidPassword' => $flags & self::FLAG_INVALID_PASSWORD,
-            ]);
-            if (!empty($bundle->getRequestMetaData()->getReturnUrl())) {
-                $view->assign('cancelUri', (string)$this->buildActionUriFromBundle('cancel', $bundle));
-            }
+        $verifyUri = (string)$this->buildActionUriFromBundle('verify', $bundle);
+        $cancelUri = (string)$this->buildActionUriFromBundle('cancel', $bundle);
+
+        $view = $this->createView('Request');
+        $view->assignMultiple([
+            'bundle' => $bundle,
+            'verifyUri' => $isJsonRequest ? '#' : $verifyUri,
+            'flagInvalidPassword' => $flags & self::FLAG_INVALID_PASSWORD,
+            'layout' => $isJsonRequest ? 'None' : 'Module',
+            'isJsonRequest' => $isJsonRequest,
+        ]);
+        // @todo Cannot cancel without knowing where to redirect to afterwards
+        if (!empty($bundle->getRequestMetaData()->getReturnUrl())) {
+            $view->assign('cancelUri', $cancelUri);
+        }
+
+        if (!$isJsonRequest) {
             $this->applyAdditionalJavaScriptModules();
             return new HtmlResponse($view->render());
         }
-        // @todo Add JSON handling
-        return new JsonResponse([], 500);
+        return new JsonResponse([
+            'formId' => 'confirm-sudo',
+            'invalidId' => 'invalid-sudo',
+            'severity' => 1, // warning in Modal/Severity,
+            'title' => $this->resolveLabel('sudoPasswordConfirm'),
+            'content' => $this->reduceSpaces($view->render()),
+            'uri' => [
+                'verify' => $verifyUri,
+                'cancel' => $cancelUri,
+            ],
+            'button' => [
+                'cancel' => $this->resolveLabel('cancel'),
+                'confirm' => $this->resolveLabel('confirm'),
+            ],
+        ], 200);
     }
 
     /**
@@ -120,43 +155,50 @@ class ConfirmationController implements LoggerAwareInterface
     protected function verifyAction(ServerRequestInterface $request, ConfirmationBundle $bundle): ResponseInterface
     {
         $parsedBody = $request->getParsedBody();
+        $isJsonRequest = $this->isJsonRequest($request);
         $confirmationPassword = empty($parsedBody['confirmationPasswordInternal'])
             ? (string)($parsedBody['confirmationPassword'] ?? '') // default field
             : $parsedBody['confirmationPasswordInternal']; // filled e.g. by `ext:rsaauth`
         $loggerContext = $this->createLoggerContext($bundle, $this->user);
 
-        if (!$this->isJsonRequest($request)) {
-            if ($this->isValidPassword($confirmationPassword)) {
-                $this->handler->grantSubjects($bundle, $this->user);
-                $this->logger->info('Password verification succeeded', $loggerContext);
+        if ($this->isValidPassword($confirmationPassword)) {
+            $this->handler->grantSubjects($bundle, $this->user);
+            $this->logger->info('Password verification succeeded', $loggerContext);
+            if (!$isJsonRequest) {
                 throw new ServerRequestInstructionException($bundle->getRequestInstruction());
+            } else {
+                return new JsonResponse(['status' => true], 200);
             }
+        }
 
-            $this->logger->warning('Password verification failed', $loggerContext);
-            $uri = $this->buildActionUriFromBundle('request', $bundle, self::FLAG_INVALID_PASSWORD);
+        $this->logger->warning('Password verification failed', $loggerContext);
+        $uri = $this->buildActionUriFromBundle('request', $bundle, self::FLAG_INVALID_PASSWORD);
+
+        if (!$isJsonRequest) {
             return new RedirectResponse($uri, 401);
         }
-        // @todo Add JSON handling
-        return new JsonResponse([], 500);
+        return new JsonResponse(['status' => false], 401);
     }
 
     protected function cancelAction(ServerRequestInterface $request, ConfirmationBundle $bundle): ResponseInterface
     {
         $loggerContext = $this->createLoggerContext($bundle, $this->user);
 
+        $this->handler->removeConfirmationBundle($bundle, $this->user);
+        $this->logger->notice('Password verification cancelled', $loggerContext);
+
         if (!$this->isJsonRequest($request)) {
-            $this->handler->removeConfirmationBundle($bundle, $this->user);
-            $this->logger->notice('Password verification cancelled', $loggerContext);
             return new RedirectResponse($bundle->getRequestMetaData()->getReturnUrl(), 401);
         }
-        // @todo Add JSON handling
-        return new JsonResponse([], 500);
+        return new JsonResponse(['status' => true], 200);
     }
 
     protected function errorAction(ServerRequestInterface $request): ResponseInterface
     {
         $view = $this->createView('Error');
-        $view->assign('returnUrl', $request->getQueryParams()['returnUrl'] ?? '');
+        $view->assignMultiple([
+            'returnUrl' => $request->getQueryParams()['returnUrl'] ?? '',
+        ]);
         return new HtmlResponse($view->render());
     }
 
@@ -164,18 +206,20 @@ class ConfirmationController implements LoggerAwareInterface
     {
         return $this->buildActionUri(
             $actionName,
-            $bundle->getRequestMetaData()->getReturnUrl(),
             $bundle->getIdentifier(),
+            $bundle->getRequestMetaData()->getReturnUrl(),
+            $bundle->getRequestMetaData()->getScope(),
             $flags
         );
     }
 
-    protected function buildActionUri(string $actionName, string $returnUrl, string $bundleIdentifier, int $flags = null): UriInterface
+    protected function buildActionUri(string $actionName, string $bundleIdentifier, string $returnUrl = null, string $scope = null,  int $flags = null): UriInterface
     {
         $parameters = [
             'action' => $actionName,
-            'returnUrl' => $returnUrl,
             'bundle' => $bundleIdentifier,
+            'returnUrl' => $returnUrl,
+            'scope' => $scope,
             'flags' => $flags,
         ];
         $parameters['hmac'] = $this->signParameters($parameters);
@@ -195,7 +239,7 @@ class ConfirmationController implements LoggerAwareInterface
 
     protected function filterParameters(array $parameters): array
     {
-        return array_intersect_key($parameters, array_flip(['action', 'returnUrl', 'bundle', 'flags', 'hmac']));
+        return array_intersect_key($parameters, array_flip(['action', 'bundle', 'returnUrl', 'scope', 'flags', 'hmac']));
     }
 
     protected function signParameters(array $parameters): string
@@ -280,6 +324,18 @@ class ConfirmationController implements LoggerAwareInterface
 
     protected function isJsonRequest(ServerRequestInterface $request): bool
     {
-        return strpos($request->getHeaderLine('content-type'), 'application/json') === 0;
+        return strpos($request->getHeaderLine('content-type'), 'application/json') === 0
+            || ($request->getQueryParams()['scope'] ?? null) === 'json';
+    }
+
+    protected function reduceSpaces(string $value): string
+    {
+        $value = preg_replace('#\s{2,}#', ' ', $value);
+        return trim($value);
+    }
+
+    private function resolveLabel(string $identifier): string
+    {
+        return $this->languageService->sL(self::LANGUAGE_PREFIX . ':' . $identifier);
     }
 }

@@ -52,6 +52,11 @@ class ConfirmationHandler implements LoggerAwareInterface
      */
     protected $currentTimestamp;
 
+    /**
+     * @var bool
+     */
+    private $immediatePurge = false;
+
     public function __construct(ConfirmationFactory $factory = null, Behavior $behavior = null)
     {
         $this->factory = $factory ?? GeneralUtility::makeInstance(ConfirmationFactory::class);
@@ -159,7 +164,7 @@ class ConfirmationHandler implements LoggerAwareInterface
                 continue;
             }
             foreach ($sessionData[$type] as $key => $item) {
-                if (is_int($item) && $item >= $this->currentTimestamp) {
+                if (!$this->immediatePurge && is_int($item) && $item >= $this->currentTimestamp) {
                     continue;
                 }
                 unset($sessionData[$type][$key]);
@@ -174,7 +179,7 @@ class ConfirmationHandler implements LoggerAwareInterface
         $purged = false;
         foreach ($sessionData as $key => $item) {
             $expirationTimestamp = $item['expiration'] ?? 0;
-            if ($expirationTimestamp >= $this->currentTimestamp) {
+            if (!$this->immediatePurge && $expirationTimestamp >= $this->currentTimestamp) {
                 continue;
             }
             $data = json_decode($item['bundle'] ?? '', true);

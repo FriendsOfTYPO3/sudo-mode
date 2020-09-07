@@ -34,6 +34,7 @@ use TYPO3\CMS\Backend\Routing\Route;
 use TYPO3\CMS\Backend\Routing\Router;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Context\Context;
+use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Http\RedirectResponse;
 use TYPO3\CMS\Core\Http\ServerRequestFactory;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -99,7 +100,22 @@ class RequestHandlerGuard implements MiddlewareInterface, LoggerAwareInterface
             ->commitConfirmationBundle($bundle, $this->getBackendUser());
         $uri = GeneralUtility::makeInstance(ConfirmationController::class)
             ->buildActionUriFromBundle('request', $bundle);
-        return GeneralUtility::makeInstance(RedirectResponse::class, $uri, 401);
+
+        if ($bundle->getRequestMetaData()->getScope() === 'json') {
+            $eventName = $bundle->getRequestMetaData()->getEventName();
+            $eventData = $bundle->getRequestMetaData()->getJsonData();
+            return GeneralUtility::makeInstance(
+                JsonResponse::class,
+                [
+                    'uri' => (string)$uri,
+                    'data' => $eventData,
+                ],
+                403,
+                $eventName ? ['X-TYPO3-EmitEvent' => $eventName] : []
+            );
+        } else {
+            return GeneralUtility::makeInstance(RedirectResponse::class, $uri, 401);
+        }
     }
 
     protected function resolveRoute(ServerRequestInterface $request): ?Route
