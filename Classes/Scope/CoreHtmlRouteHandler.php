@@ -36,6 +36,12 @@ class CoreHtmlRouteHandler implements RouteHandlerInterface
                 $queryParams = $request->getQueryParams();
                 return GeneralUtility::sanitizeLocalUrl($parsedBody['returnUrl'] ?? $queryParams['returnUrl'] ?? null);
             },
+            // \TYPO3\CMS\Backend\Controller\SimpleDataHandlerController::mainAction
+            '/record/commit' => function(Route $route, ServerRequestInterface $request): string {
+                $parsedBody = $request->getParsedBody();
+                $queryParams = $request->getQueryParams();
+                return GeneralUtility::sanitizeLocalUrl($parsedBody['redirect'] ?? $queryParams['redirect'] ?? null);
+            },
             // \TYPO3\CMS\Setup\Controller\SetupModuleController
             '/module/user/setup' => function(Route $route, ServerRequestInterface $request): string {
                 $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
