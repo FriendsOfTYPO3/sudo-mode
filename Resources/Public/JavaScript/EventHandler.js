@@ -8,8 +8,9 @@ define(
         // opt(ional) modules using loader plugin
         'TYPO3/CMS/SudoMode/opt!TYPO3/CMS/Backend/BroadcastService',
         'TYPO3/CMS/SudoMode/opt!TYPO3/CMS/Backend/BroadcastMessage',
+        'TYPO3/CMS/SudoMode/opt!TYPO3/CMS/Rsaauth/RsaEncryptionModule'
     ],
-    function ($, Modal, broadcastService, BroadcastMessageModule) {
+    function ($, Modal, broadcastService, BroadcastMessageModule, RsaEncryption) {
         'use strict';
 
         if (!broadcastService || !BroadcastMessageModule) {
@@ -68,6 +69,11 @@ define(
                         }
                     }
                 ]
+            }).on('shown.bs.modal', function(evt) {
+                if (RsaEncryption) {
+                    // TYPO3 v9 ext:rsaauth initialization
+                    RsaEncryption.registerForm($form.get(0));
+                }
             }).on('hidden.bs.modal', function(evt) {
                 if (that.canCancel) {
                     that.cancelAction(instruction);
@@ -81,8 +87,14 @@ define(
         }
 
         EventHandler.prototype.isRelevant = function() {
+            var expectedValue = 'sudo-mode:confirmation-request';
             return this.response.headers
-                && this.response.headers.get('x-typo3-emitevent') === 'sudo-mode:confirmation-request';
+                && (
+                    this.response.headers instanceof Map
+                        && this.response.headers.get('x-typo3-emitevent') === expectedValue
+                    || this.response.headers instanceof Object
+                        && this.response.headers['x-typo3-emitevent'] === expectedValue
+                );
         }
 
         EventHandler.prototype.requestAction = function() {
