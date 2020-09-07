@@ -26,17 +26,14 @@ class CoreJsonRouteHandler implements RouteHandlerInterface
 
     public function __construct()
     {
-        // TYPO3 v10
         $this->handlers = [
+            // \TYPO3\CMS\Backend\Controller\SimpleDataHandlerController::processAjaxRequest
             '/ajax/record/process' => function(Route $route, ServerRequestInterface $request, RequestMetaData $metaData): RequestMetaData {
                 return $metaData
                     ->withEventName('sudo-mode:confirmation-request')
                     ->withJsonData([]);
             },
         ];
-
-        // TYPO3 v9
-        // $this->handlers['/user/setup'] = $this->handlers['/module/user/setup'];
     }
 
     public function canHandle(ServerRequestInterface $request, Route $route): bool
