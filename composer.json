@@ -2,7 +2,12 @@
   "name": "friendsoftypo3/sudo-mode",
   "type": "typo3-cms-extension",
   "description": "TYPO3 sudo mode",
-  "homepage": "https://typo3.org/",
+  "homepage": "https://extensions.typo3.org/extension/sudo_mode",
+  "support": {
+    "docs": "https://docs.typo3.org/p/friendsoftypo3/sudo-mode/main/en-us/",
+    "issues": "https://github.com/FriendsOfTYPO3/sudo-mode/issues",
+    "source": "https://github.com/FriendsOfTYPO3/sudo-mode"
+  },
   "license": ["GPL-2.0-or-later"],
   "keywords": ["TYPO3", "security", "sudo", "mitigation"],
   "authors": [
@@ -12,10 +17,6 @@
       "homepage": "https://xn--hofhckerei-t5a.de/"
     }
   ],
-  "support": {
-    "source": "https://github.com/FriendsOfTYPO3/sudo-mode",
-    "issues": "https://github.com/FriendsOfTYPO3/sudo-mode/issues"
-  },
   "require": {
     "ext-dom": "*",
     "ext-libxml": "*",
